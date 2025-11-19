@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, agentConfigs, generatedCode, InsertAgentConfig } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,65 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Agent configuration queries
+export async function createAgentConfig(userId: number, config: Omit<InsertAgentConfig, "userId">) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(agentConfigs).values({
+    ...config,
+    userId,
+  });
+  
+  // Return the insertId for MySQL
+  return { insertId: (result as any).insertId || 0 };
+}
+
+export async function getAgentConfigsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(agentConfigs).where(eq(agentConfigs.userId, userId));
+}
+
+export async function getAgentConfigById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(agentConfigs).where(eq(agentConfigs.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateAgentConfig(id: number, updates: Partial<InsertAgentConfig>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(agentConfigs).set(updates).where(eq(agentConfigs.id, id));
+}
+
+export async function deleteAgentConfig(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(agentConfigs).where(eq(agentConfigs.id, id));
+}
+
+// Generated code queries
+export async function saveGeneratedCode(agentConfigId: number, codeType: string, code: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(generatedCode).values({
+    agentConfigId,
+    codeType,
+    code,
+    language: "python",
+  });
+}
+
+export async function getGeneratedCodeByAgentId(agentConfigId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(generatedCode).where(eq(generatedCode.agentConfigId, agentConfigId));
+}
