@@ -68,12 +68,19 @@ export default function AgentsList() {
               Create, manage, and generate code for your LangGraph agents
             </p>
           </div>
-          <Link href="/create">
-            <Button size="lg">
-              <Plus className="mr-2 h-5 w-5" />
-              Create New Agent
-            </Button>
-          </Link>
+          <div className="flex gap-3">
+            <Link href="/analytics">
+              <Button size="lg" variant="outline">
+                View Analytics
+              </Button>
+            </Link>
+            <Link href="/create">
+              <Button size="lg">
+                <Plus className="mr-2 h-5 w-5" />
+                Create New Agent
+              </Button>
+            </Link>
+          </div>
         </div>
         
         {/* Agents List */}

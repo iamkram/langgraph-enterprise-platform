@@ -150,6 +150,107 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // Approval workflow
+  approval: router({
+    submit: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { submitAgentForApproval } = await import('./approvalWorkflow');
+        return await submitAgentForApproval({
+          agentConfigId: input.agentConfigId,
+          submitterEmail: ctx.user.email || '',
+          notes: input.notes,
+        });
+      }),
+    
+    status: protectedProcedure
+      .input(z.object({ agentConfigId: z.number() }))
+      .query(async ({ input }) => {
+        const { getApprovalStatus } = await import('./approvalWorkflow');
+        return await getApprovalStatus(input.agentConfigId);
+      }),
+    
+    cancel: protectedProcedure
+      .input(z.object({ agentConfigId: z.number() }))
+      .mutation(async ({ input }) => {
+        const { cancelApprovalRequest } = await import('./approvalWorkflow');
+        return await cancelApprovalRequest(input.agentConfigId);
+      }),
+    
+    listByStatus: protectedProcedure
+      .input(z.object({ status: z.string() }))
+      .query(async ({ input }) => {
+        const { listAgentsByStatus } = await import('./approvalWorkflow');
+        return await listAgentsByStatus(input.status);
+      }),
+  }),
+
+  // Analytics
+  analytics: router({
+    logEvent: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        eventType: z.string(),
+        modelName: z.string().optional(),
+        tokensUsed: z.number().optional(),
+        executionTimeMs: z.number().optional(),
+        metadata: z.any().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { logUsageEvent } = await import('./db');
+        await logUsageEvent({
+          ...input,
+          userId: ctx.user.id,
+        });
+        return { success: true };
+      }),
+    
+    getDailyMetrics: protectedProcedure
+      .input(z.object({
+        date: z.string(),
+        agentConfigId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { getDailyMetrics } = await import('./db');
+        return await getDailyMetrics(input.date, input.agentConfigId);
+      }),
+    
+    aggregateDaily: protectedProcedure
+      .input(z.object({ date: z.string() }))
+      .mutation(async ({ input }) => {
+        const { aggregateDailyMetrics } = await import('./db');
+        await aggregateDailyMetrics(input.date);
+        return { success: true };
+      }),
+  }),
+
+  // Semantic search
+  search: router({
+    agents: protectedProcedure
+      .input(z.object({
+        query: z.string(),
+        limit: z.number().optional(),
+        minSimilarity: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { searchAgents } = await import('./semanticSearch');
+        return await searchAgents(input.query, input.limit, input.minSimilarity);
+      }),
+    
+    similar: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const { getSimilarAgents } = await import('./semanticSearch');
+        return await getSimilarAgents(input.agentConfigId, input.limit);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

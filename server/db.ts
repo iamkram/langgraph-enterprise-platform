@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, agentConfigs, generatedCode, InsertAgentConfig } from "../drizzle/schema";
+import { InsertUser, users, agentConfigs, generatedCode, InsertAgentConfig, webhookEvents, usageLogs, dailyMetrics } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -150,4 +150,124 @@ export async function getGeneratedCodeByAgentId(agentConfigId: number) {
   if (!db) return [];
   
   return await db.select().from(generatedCode).where(eq(generatedCode.agentConfigId, agentConfigId));
+}
+
+// Agent registry and approval functions
+export async function updateAgentApprovalStatus(jiraIssueKey: string, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(agentConfigs)
+    .set({ agentStatus: status })
+    .where(eq(agentConfigs.jiraIssueKey, jiraIssueKey));
+}
+
+export async function getAgentByJiraIssue(jiraIssueKey: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(agentConfigs).where(eq(agentConfigs.jiraIssueKey, jiraIssueKey)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function logWebhookEvent(event: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(webhookEvents).values({
+    eventId: event.id,
+    eventType: event.eventType,
+    issueKey: event.issueKey,
+    issueId: event.issueId,
+    status: event.status,
+    payload: JSON.stringify(event.payload),
+    processed: 1,
+  });
+}
+
+// Usage analytics functions
+export async function logUsageEvent(event: {
+  agentConfigId: number;
+  userId: number;
+  eventType: string;
+  modelName?: string;
+  tokensUsed?: number;
+  executionTimeMs?: number;
+  metadata?: any;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(usageLogs).values({
+    agentConfigId: event.agentConfigId,
+    userId: event.userId,
+    eventType: event.eventType,
+    modelName: event.modelName,
+    tokensUsed: event.tokensUsed,
+    executionTimeMs: event.executionTimeMs,
+    metadata: event.metadata ? JSON.stringify(event.metadata) : null,
+  });
+}
+
+export async function getDailyMetrics(date: string, agentConfigId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (agentConfigId) {
+    const { and } = await import('drizzle-orm');
+    return await db.select().from(dailyMetrics)
+      .where(and(
+        eq(dailyMetrics.date, date),
+        eq(dailyMetrics.agentConfigId, agentConfigId)
+      ));
+  }
+  
+  return await db.select().from(dailyMetrics).where(eq(dailyMetrics.date, date));
+}
+
+export async function aggregateDailyMetrics(date: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // This would typically use SQL aggregation queries
+  // For now, we'll implement a simplified version
+  const logs = await db.select().from(usageLogs)
+    .where(eq(usageLogs.createdAt, new Date(date)));
+  
+  // Group by agent and aggregate
+  const metrics = new Map<number, any>();
+  
+  for (const log of logs) {
+    const key = log.agentConfigId;
+    if (!metrics.has(key)) {
+      metrics.set(key, {
+        totalExecutions: 0,
+        totalTokens: 0,
+        totalExecutionTime: 0,
+        uniqueUsers: new Set(),
+      });
+    }
+    
+    const metric = metrics.get(key)!;
+    if (log.eventType === 'executed') {
+      metric.totalExecutions++;
+      metric.totalTokens += log.tokensUsed || 0;
+      metric.totalExecutionTime += log.executionTimeMs || 0;
+    }
+    metric.uniqueUsers.add(log.userId);
+  }
+  
+  // Insert aggregated metrics
+  for (const [agentConfigId, metric] of Array.from(metrics.entries())) {
+    await db.insert(dailyMetrics).values({
+      date,
+      agentConfigId,
+      totalExecutions: metric.totalExecutions,
+      totalTokens: metric.totalTokens,
+      avgExecutionTimeMs: metric.totalExecutions > 0 
+        ? Math.round(metric.totalExecutionTime / metric.totalExecutions)
+        : null,
+      uniqueUsers: metric.uniqueUsers.size,
+    });
+  }
 }

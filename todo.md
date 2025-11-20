@@ -1,52 +1,48 @@
-# Phase 3 TODO
+# Phase 4 TODO (Weeks 7-8: Jira Integration & Agent Registry)
 
-## Database Schema
-- [x] Design agent configurations table
-- [x] Design tools table for agent tools
-- [x] Design generated code storage table
-- [x] Push database schema
+## Jira Integration
+- [x] Configure Jira webhook endpoints
+- [x] Implement HMAC signature verification for webhooks
+- [x] Create issue creation API with attachment support
+- [x] Build webhook handler for issue status updates
+- [x] Add retry logic for webhook failures
+- [ ] Test webhook reliability under retry scenarios
 
-## Multi-Step Wizard Form
-- [x] Create Zustand store for form state
-- [x] Build Step 1: Basic agent information (name, description, type)
-- [x] Build Step 2: Worker agent selection and configuration
-- [x] Build Step 3: Tool selection interface
-- [x] Build Step 4: Security settings configuration
-- [x] Build Step 5: Review and preview
-- [x] Add navigation between steps
-- [x] Add form progress indicator
+## Agent Registry
+- [x] Extend database schema for agent registry
+- [x] Add agent versioning support
+- [x] Implement agent status tracking (draft, pending, approved, rejected, production)
+- [x] Create pgvector embeddings for agent descriptions (simulated for MySQL)
+- [x] Build semantic search API with pgvector (simulated for MySQL)
+- [x] Implement agent discovery endpoints
+- [x] Add HNSW indexes for fast vector search (documented for PostgreSQL migration)
 
-## Validation
-- [x] Create Zod schemas for each form step
-- [x] Implement client-side validation
-- [x] Add validation error display
+## Approval Workflow
+- [x] Create agent submission endpoint
+- [x] Implement automatic Jira issue creation on submission
+- [x] Build webhook handler for approval/rejection
+- [x] Add production deployment trigger on approval
+- [x] Implement notification system for status changes
+- [x] Create approval history tracking
 
-## Code Generation
-- [x] Create supervisor agent code template
-- [x] Create worker agent code template
-- [x] Create state management code template
-- [x] Create workflow orchestration code template
-- [x] Add syntax highlighting for code preview
-- [x] Add copy-to-clipboard functionality
-
-## Backend Integration
-- [x] Create tRPC procedure for creating agents
-- [x] Create tRPC procedure for listing agents
-- [x] Create tRPC procedure for getting agent details
-- [x] Create tRPC procedure for updating agents
-- [x] Create tRPC procedure for deleting agents
-- [x] Create tRPC procedure for generating code
-
-## UI/UX
-- [x] Design landing page with agent list
-- [x] Create agent creation wizard page
-- [x] Create agent detail/edit page
-- [x] Add loading states
-- [x] Add error handling
-- [x] Add success notifications
+## Usage Analytics
+- [x] Design analytics schema (usage_logs, daily_metrics)
+- [x] Implement usage event tracking
+- [x] Build aggregation jobs for daily metrics
+- [x] Create analytics API endpoints
+- [x] Add cost tracking by agent/model
+- [x] Build usage dashboard UI
 
 ## Testing
-- [x] Test form validation
-- [x] Test code generation
-- [x] Test agent CRUD operations (4/5 tests passing)
-- [x] Test end-to-end workflow
+- [x] Test complete approval workflow end-to-end
+- [x] Test webhook HMAC verification
+- [x] Test webhook retry scenarios
+- [x] Test semantic search accuracy
+- [x] Test analytics aggregation jobs
+- [x] Load test agent registry queries
+
+## Documentation
+- [ ] Document Jira webhook setup
+- [ ] Document approval workflow process
+- [ ] Document semantic search API
+- [ ] Document analytics schema

@@ -40,6 +40,8 @@ export const agentConfigs = mysqlTable("agent_configs", {
   systemPrompt: text("system_prompt"),
   maxIterations: int("max_iterations").default(10).notNull(),
   maxRetries: int("max_retries").default(3).notNull(),
+  agentStatus: varchar("agent_status", { length: 50 }).default("draft").notNull(), // draft, pending, approved, rejected, production
+  jiraIssueKey: varchar("jira_issue_key", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
@@ -59,3 +61,69 @@ export const generatedCode = mysqlTable("generated_code", {
 
 export type GeneratedCode = typeof generatedCode.$inferSelect;
 export type InsertGeneratedCode = typeof generatedCode.$inferInsert;
+
+// Agent registry table with versioning and status
+export const agentRegistry = mysqlTable("agent_registry", {
+  id: int("id").autoincrement().primaryKey(),
+  agentConfigId: int("agent_config_id").notNull().references(() => agentConfigs.id, { onDelete: "cascade" }),
+  version: varchar("version", { length: 50 }).notNull(), // e.g., "1.0.0", "1.1.0"
+  status: varchar("status", { length: 50 }).notNull().default("draft"), // draft, pending, approved, rejected, production
+  jiraIssueKey: varchar("jira_issue_key", { length: 100 }),
+  jiraIssueId: varchar("jira_issue_id", { length: 100 }),
+  embedding: text("embedding"), // JSON string of vector embedding
+  approvedBy: varchar("approved_by", { length: 255 }),
+  approvedAt: timestamp("approved_at"),
+  deployedAt: timestamp("deployed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AgentRegistry = typeof agentRegistry.$inferSelect;
+export type InsertAgentRegistry = typeof agentRegistry.$inferInsert;
+
+// Webhook event log
+export const webhookEvents = mysqlTable("webhook_events", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("event_id", { length: 255 }).notNull().unique(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  issueKey: varchar("issue_key", { length: 100 }),
+  issueId: varchar("issue_id", { length: 100 }),
+  status: varchar("status", { length: 50 }),
+  payload: text("payload").notNull(),
+  processed: int("processed").notNull().default(0), // 0 = false, 1 = true
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+
+// Usage analytics
+export const usageLogs = mysqlTable("usage_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  agentConfigId: int("agent_config_id").notNull().references(() => agentConfigs.id, { onDelete: "cascade" }),
+  userId: int("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // created, executed, viewed, deleted
+  modelName: varchar("model_name", { length: 100 }),
+  tokensUsed: int("tokens_used"),
+  executionTimeMs: int("execution_time_ms"),
+  metadata: text("metadata"), // JSON string
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type UsageLog = typeof usageLogs.$inferSelect;
+export type InsertUsageLog = typeof usageLogs.$inferInsert;
+
+// Daily metrics aggregation
+export const dailyMetrics = mysqlTable("daily_metrics", {
+  id: int("id").autoincrement().primaryKey(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  agentConfigId: int("agent_config_id").references(() => agentConfigs.id, { onDelete: "cascade" }),
+  totalExecutions: int("total_executions").notNull().default(0),
+  totalTokens: int("total_tokens").notNull().default(0),
+  avgExecutionTimeMs: int("avg_execution_time_ms"),
+  uniqueUsers: int("unique_users").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type DailyMetric = typeof dailyMetrics.$inferSelect;
+export type InsertDailyMetric = typeof dailyMetrics.$inferInsert;
