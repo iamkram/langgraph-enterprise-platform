@@ -1,48 +1,65 @@
-# Phase 4 TODO (Weeks 7-8: Jira Integration & Agent Registry)
+# Phase 5 TODO (Weeks 9-10: AWS Deployment & Observability)
 
-## Jira Integration
-- [x] Configure Jira webhook endpoints
-- [x] Implement HMAC signature verification for webhooks
-- [x] Create issue creation API with attachment support
-- [x] Build webhook handler for issue status updates
-- [x] Add retry logic for webhook failures
-- [ ] Test webhook reliability under retry scenarios
+## Infrastructure as Code (Terraform)
+- [x] Create Terraform project structure
+- [x] Write VPC configuration (public/private subnets, NAT gateway, security groups)
+- [x] Write RDS Multi-AZ configuration for PostgreSQL
+- [x] Write ECS cluster configuration
+- [x] Write Fargate task definitions
+- [x] Write Application Load Balancer (ALB) configuration
+- [x] Write IAM roles and policies
+- [x] Write CloudWatch log groups
+- [ ] Create terraform.tfvars.example
 
-## Agent Registry
-- [x] Extend database schema for agent registry
-- [x] Add agent versioning support
-- [x] Implement agent status tracking (draft, pending, approved, rejected, production)
-- [x] Create pgvector embeddings for agent descriptions (simulated for MySQL)
-- [x] Build semantic search API with pgvector (simulated for MySQL)
-- [x] Implement agent discovery endpoints
-- [x] Add HNSW indexes for fast vector search (documented for PostgreSQL migration)
+## Blue-Green Deployment
+- [x] Configure CodeDeploy application
+- [x] Write CodeDeploy deployment group with blue-green strategy
+- [x] Configure canary deployment patterns (10% → 50% → 100%)
+- [x] Set up CloudWatch alarms for automatic rollback
+- [x] Create deployment hooks (pre-traffic, post-traffic)
+- [ ] Write deployment validation scripts
+- [ ] Test rollback scenarios
 
-## Approval Workflow
-- [x] Create agent submission endpoint
-- [x] Implement automatic Jira issue creation on submission
-- [x] Build webhook handler for approval/rejection
-- [x] Add production deployment trigger on approval
-- [x] Implement notification system for status changes
-- [x] Create approval history tracking
+## LangSmith Integration
+- [x] Add LangSmith environment variables to task definition
+- [x] Implement LangSmith tracing in agent execution
+- [x] Configure prompt management
+- [x] Set up cost tracking by model and agent
+- [x] Create LangSmith dashboard configuration
+- [x] Add tracing to supervisor and worker agents
+- [ ] Test end-to-end tracing
 
-## Usage Analytics
-- [x] Design analytics schema (usage_logs, daily_metrics)
-- [x] Implement usage event tracking
-- [x] Build aggregation jobs for daily metrics
-- [x] Create analytics API endpoints
-- [x] Add cost tracking by agent/model
-- [x] Build usage dashboard UI
+## Auto-Scaling
+- [x] Write ECS service auto-scaling configuration
+- [x] Implement CPU-based target tracking policy
+- [x] Implement memory-based target tracking policy
+- [x] Configure scale-out policies (thresholds, cooldown)
+- [x] Configure scale-in policies (thresholds, cooldown)
+- [x] Set min/max task counts
+- [ ] Test scale-out behavior under load
+- [ ] Test scale-in behavior when idle
 
-## Testing
-- [x] Test complete approval workflow end-to-end
-- [x] Test webhook HMAC verification
-- [x] Test webhook retry scenarios
-- [x] Test semantic search accuracy
-- [x] Test analytics aggregation jobs
-- [x] Load test agent registry queries
+## CloudWatch Monitoring
+- [x] Create CloudWatch dashboard for ECS metrics
+- [x] Set up alarms for CPU utilization
+- [x] Set up alarms for memory utilization
+- [x] Set up alarms for request latency
+- [x] Set up alarms for error rates
+- [x] Configure SNS topics for alarm notifications
+- [ ] Create runbook for common alerts
+
+## Deployment & Validation
+- [x] Create staging environment
+- [x] Deploy to staging with Terraform
+- [ ] Run smoke tests on staging
+- [ ] Load test with 100+ concurrent agents
+- [ ] Measure failover time during deployment
+- [x] Validate blue-green deployment
+- [x] Document deployment procedures
 
 ## Documentation
-- [ ] Document Jira webhook setup
-- [ ] Document approval workflow process
-- [ ] Document semantic search API
-- [ ] Document analytics schema
+- [x] Write deployment guide
+- [x] Document AWS architecture
+- [x] Create runbooks for operations
+- [x] Document rollback procedures
+- [x] Write cost optimization guide
