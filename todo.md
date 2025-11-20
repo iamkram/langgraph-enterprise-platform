@@ -77,3 +77,42 @@
 - [x] Documentation: Architecture diagrams finalized
 - [x] Documentation: API documentation published
 - [x] Documentation: Runbooks created
+
+---
+
+# Enhancement Features (Beyond Original Specification)
+
+## Agent Templates Library
+- [x] Create templates data structure with metadata
+- [x] Build 5 pre-configured templates from reference agents
+- [x] Create Templates Gallery page in UI
+- [x] Implement template preview with code samples
+- [x] Add "Clone Template" functionality
+- [x] Pre-fill wizard form from template data
+- [ ] Test template cloning workflow
+
+## CI/CD Pipeline
+- [x] Create GitHub Actions workflow file
+- [x] Configure Docker build and ECR push
+- [x] Add automated testing in pipeline
+- [x] Integrate CodeDeploy deployment trigger
+- [x] Add environment-specific configurations
+- [x] Set up deployment notifications
+- [ ] Test complete CI/CD flow
+
+## Agent Execution Engine
+- [x] Create execution API endpoint
+- [x] Build Python agent executor service (LLM-based simulation)
+- [x] Implement real-time execution monitoring
+- [x] Create Test Run UI component
+- [x] Add sample input templates
+- [x] Integrate LangSmith trace viewing (metadata)
+- [x] Display execution results in UI
+- [ ] Add execution history tracking
+- [ ] Test execution with all agent types
+
+## Documentation Updates
+- [ ] Document templates library usage
+- [ ] Create CI/CD setup guide
+- [ ] Document execution engine API
+- [ ] Update README with new features

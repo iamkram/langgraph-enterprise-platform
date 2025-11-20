@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import CodePreview from "@/components/CodePreview";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import TestRunDialog from "@/components/TestRunDialog";
 import { Link, useParams } from "wouter";
 
 export default function AgentDetail() {
@@ -54,9 +55,31 @@ export default function AgentDetail() {
                 <p className="text-muted-foreground">{agent.description}</p>
               )}
             </div>
-            <Badge variant="secondary" className="capitalize text-base px-4 py-2">
-              {agent.agentType}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <TestRunDialog
+                agentConfig={{
+                  name: agent.name,
+                  description: agent.description || '',
+                  agentType: agent.agentType,
+                  model: agent.modelName,
+                  workers: JSON.parse(agent.workerAgents || '[]').map((name: string) => ({
+                    name,
+                    description: `Worker agent: ${name}`,
+                    systemPrompt: `You are a ${name} agent.`,
+                  })),
+                  tools: JSON.parse(agent.tools || '[]'),
+                  security: {
+                    enablePiiDetection: agent.securityEnabled,
+                    enableGuardrails: agent.securityEnabled,
+                    enableCheckpointing: agent.checkpointingEnabled,
+                  },
+                }}
+                agentId={agent.id}
+              />
+              <Badge variant="secondary" className="capitalize text-base px-4 py-2">
+                {agent.agentType}
+              </Badge>
+            </div>
           </div>
         </div>
         

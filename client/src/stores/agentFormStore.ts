@@ -49,6 +49,7 @@ export interface AgentFormState {
   nextStep: () => void;
   previousStep: () => void;
   resetForm: () => void;
+  loadFromTemplate: (template: any) => void;
 }
 
 const initialState = {
@@ -101,4 +102,15 @@ export const useAgentFormStore = create<AgentFormState>((set) => ({
   previousStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
   
   resetForm: () => set(initialState),
+  
+  loadFromTemplate: (template: any) => set({
+    name: template.config.name,
+    description: template.config.description,
+    agentType: template.config.agentType,
+    modelName: template.config.model,
+    workerAgents: template.config.workers.map((w: any) => w.name),
+    tools: template.config.tools,
+    securityEnabled: template.config.security.enablePiiDetection || template.config.security.enableGuardrails,
+    checkpointingEnabled: template.config.security.enableCheckpointing,
+  }),
 }));
