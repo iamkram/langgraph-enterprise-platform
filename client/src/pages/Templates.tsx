@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2 } from "lucide-react";
+import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { useAgentFormStore } from "@/stores/agentFormStore";
 
 export default function Templates() {
@@ -47,6 +48,12 @@ export default function Templates() {
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container py-8">
+          <Link href="/">
+            <Button variant="ghost" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold tracking-tight">Agent Templates</h1>

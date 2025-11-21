@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu } from "lucide-react";
+import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { architectureComponents, type ComponentDetail } from "@shared/architectureData";
 
 const diagrams = [
@@ -79,6 +80,12 @@ export default function ArchitectureExplorer() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
         <div className="mb-8">
+          <Link href="/">
+            <Button variant="ghost" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
           <h1 className="text-4xl font-bold mb-2">Architecture Explorer</h1>
           <p className="text-muted-foreground">
             Interactive documentation for the Enterprise LangGraph Agent Scaffolding Platform
