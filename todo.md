@@ -218,3 +218,38 @@
 - [x] Add JSON validation for imports
 - [x] Implement agent creation from imported JSON
 - [x] Test export/import with all agent types (7 tests passing)
+
+
+---
+
+# Advanced Features (Phase 7)
+
+## Agent Versioning System
+- [x] Create agent_versions database table
+- [x] Implement version creation on agent updates
+- [x] Build version history query endpoints
+- [x] Create rollback functionality
+- [x] Build version history UI component
+- [x] Implement rollback confirmation dialog
+- [x] Test versioning with multiple updates (5 tests passing)
+
+## Bulk Operations
+- [x] Add multi-select state management
+- [x] Create bulk action toolbar component (floating)
+- [x] Implement bulk export functionality
+- [x] Implement bulk delete with confirmation
+- [x] Add bulk tag assignment dialog
+- [x] Create select all/none controls
+- [x] Add visual feedback for selected items (checkboxes + toolbar)
+- [x] Test bulk operations (5 tests passing)
+
+## Tags & Filtering System
+- [x] Create tags database table
+- [x] Create agent_tags junction table
+- [x] Implement tag CRUD endpoints
+- [x] Build tag assignment logic
+- [x] Create tag filter UI component
+- [x] Add tag color coding
+- [x] Implement tag badges on agent cards
+- [x] Add tag management in filter dialog
+- [x] Test filtering with multiple tags (9 tests passing)

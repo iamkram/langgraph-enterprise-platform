@@ -97,13 +97,16 @@ export const appRouter = router({
         data: agentConfigSchema.partial(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const { getAgentConfigById, updateAgentConfig } = await import("./db");
+        const { getAgentConfigById, updateAgentConfig, createAgentVersion } = await import("./db");
         
         // Verify ownership
         const existing = await getAgentConfigById(input.id);
         if (!existing || existing.userId !== ctx.user.id) {
           throw new Error("Unauthorized");
         }
+        
+        // Create version snapshot before updating
+        await createAgentVersion(input.id, ctx.user.id, "Agent configuration updated");
         
         await updateAgentConfig(input.id, {
           ...input.data,
@@ -315,6 +318,174 @@ export const appRouter = router({
         const { aggregateDailyMetrics } = await import('./db');
         await aggregateDailyMetrics(input.date);
         return { success: true };
+      }),
+  }),
+
+  // Agent versioning
+  versions: router({
+    create: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        changeDescription: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createAgentVersion } = await import('./db');
+        return await createAgentVersion(input.agentConfigId, ctx.user.id, input.changeDescription);
+      }),
+    
+    history: protectedProcedure
+      .input(z.object({ agentConfigId: z.number() }))
+      .query(async ({ input }) => {
+        const { getAgentVersionHistory } = await import('./db');
+        return await getAgentVersionHistory(input.agentConfigId);
+      }),
+    
+    get: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        versionNumber: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { getAgentVersion } = await import('./db');
+        return await getAgentVersion(input.agentConfigId, input.versionNumber);
+      }),
+    
+    rollback: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        versionNumber: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { rollbackToVersion } = await import('./db');
+        return await rollbackToVersion(input.agentConfigId, input.versionNumber, ctx.user.id);
+      }),
+  }),
+
+  // Tags management
+  tags: router({
+    list: protectedProcedure.query(async () => {
+      const { getAllTags } = await import('./db');
+      return await getAllTags();
+    }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).max(50),
+        color: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createTag } = await import('./db');
+        return await createTag(input.name, ctx.user.id, input.color, input.description);
+      }),
+    
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).max(50).optional(),
+        color: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateTag } = await import('./db');
+        const { id, ...updates } = input;
+        await updateTag(id, updates);
+        return { success: true };
+      }),
+    
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteTag } = await import('./db');
+        await deleteTag(input.id);
+        return { success: true };
+      }),
+    
+    addToAgent: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        tagId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { addTagToAgent } = await import('./db');
+        return await addTagToAgent(input.agentConfigId, input.tagId);
+      }),
+    
+    removeFromAgent: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        tagId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { removeTagFromAgent } = await import('./db');
+        await removeTagFromAgent(input.agentConfigId, input.tagId);
+        return { success: true };
+      }),
+    
+    getAgentTags: protectedProcedure
+      .input(z.object({ agentConfigId: z.number() }))
+      .query(async ({ input }) => {
+        const { getAgentTags } = await import('./db');
+        return await getAgentTags(input.agentConfigId);
+      }),
+    
+    getAgentsByTag: protectedProcedure
+      .input(z.object({ tagId: z.number() }))
+      .query(async ({ input }) => {
+        const { getAgentsByTag } = await import('./db');
+        return await getAgentsByTag(input.tagId);
+      }),
+  }),
+
+  // Bulk operations
+  bulk: router({
+    delete: protectedProcedure
+      .input(z.object({ agentIds: z.array(z.number()) }))
+      .mutation(async ({ ctx, input }) => {
+        const { bulkDeleteAgents } = await import('./db');
+        return await bulkDeleteAgents(input.agentIds, ctx.user.id);
+      }),
+    
+    addTags: protectedProcedure
+      .input(z.object({
+        agentIds: z.array(z.number()),
+        tagIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const { bulkAddTagsToAgents } = await import('./db');
+        return await bulkAddTagsToAgents(input.agentIds, input.tagIds);
+      }),
+    
+    export: protectedProcedure
+      .input(z.object({ agentIds: z.array(z.number()) }))
+      .query(async ({ ctx, input }) => {
+        const { getAgentConfigById } = await import('./db');
+        const agents = [];
+        
+        for (const id of input.agentIds) {
+          const config = await getAgentConfigById(id);
+          if (config && config.userId === ctx.user.id) {
+            agents.push({
+              name: config.name,
+              description: config.description,
+              agentType: config.agentType,
+              workerAgents: JSON.parse(config.workerAgents || '[]'),
+              tools: JSON.parse(config.tools || '[]'),
+              securityEnabled: config.securityEnabled === 1,
+              checkpointingEnabled: config.checkpointingEnabled === 1,
+              modelName: config.modelName,
+              systemPrompt: config.systemPrompt,
+              maxIterations: config.maxIterations,
+              maxRetries: config.maxRetries,
+            });
+          }
+        }
+        
+        return {
+          version: "1.0",
+          exportedAt: new Date().toISOString(),
+          agents,
+        };
       }),
   }),
 

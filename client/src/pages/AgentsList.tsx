@@ -2,14 +2,20 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Plus, Loader2, Bot, Trash2, Sparkles, Layers, GraduationCap, Download, Upload } from "lucide-react";
+import { Plus, Loader2, Bot, Trash2, Sparkles, Layers, GraduationCap, Download, Upload, History } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import { useTutorial } from "@/hooks/useTutorial";
 import { TutorialOverlay } from "@/components/TutorialOverlay";
-import { useEffect } from "react";
+import { VersionHistory } from "@/components/VersionHistory";
+import { BulkActionsToolbar } from "@/components/BulkActionsToolbar";
+import { BulkTagDialog } from "@/components/BulkTagDialog";
+import { TagFilter } from "@/components/TagFilter";
+import { AgentTagBadges } from "@/components/AgentTagBadges";
+import { useEffect, useState } from "react";
 
 export default function AgentsList() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
@@ -17,6 +23,17 @@ export default function AgentsList() {
   const { data: agents, isLoading, refetch } = trpc.agents.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  
+  // Bulk operations state
+  const [selectedAgentIds, setSelectedAgentIds] = useState<number[]>([]);
+  const [bulkTagDialogOpen, setBulkTagDialogOpen] = useState(false);
+  
+  // Version history state
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [selectedAgentForHistory, setSelectedAgentForHistory] = useState<{ id: number; name: string } | null>(null);
+  
+  // Tag filtering state
+  const [selectedTagFilter, setSelectedTagFilter] = useState<number[]>([]);
   
   const utils = trpc.useUtils();
   const deleteMutation = trpc.agents.delete.useMutation({
@@ -87,6 +104,72 @@ export default function AgentsList() {
     };
     input.click();
   };
+  
+  // Bulk operations mutations
+  const bulkDeleteMutation = trpc.bulk.delete.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Deleted ${data.deletedCount} agent(s)`);
+      setSelectedAgentIds([]);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete agents: ${error.message}`);
+    },
+  });
+  
+  // Bulk operations handlers
+  const handleSelectAgent = (agentId: number) => {
+    setSelectedAgentIds(prev =>
+      prev.includes(agentId)
+        ? prev.filter(id => id !== agentId)
+        : [...prev, agentId]
+    );
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedAgentIds.length === (agents?.length || 0)) {
+      setSelectedAgentIds([]);
+    } else {
+      setSelectedAgentIds(agents?.map(a => a.id) || []);
+    }
+  };
+  
+  const handleBulkDelete = () => {
+    if (confirm(`Are you sure you want to delete ${selectedAgentIds.length} agent(s)?`)) {
+      bulkDeleteMutation.mutate({ agentIds: selectedAgentIds });
+    }
+  };
+  
+  const handleBulkExport = async () => {
+    try {
+      const result = await utils.bulk.export.fetch({ agentIds: selectedAgentIds });
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `agents-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${selectedAgentIds.length} agent(s)`);
+    } catch (error) {
+      toast.error("Failed to export agents");
+    }
+  };
+  
+  const handleShowVersionHistory = (id: number, name: string) => {
+    setSelectedAgentForHistory({ id, name });
+    setVersionHistoryOpen(true);
+  };
+  
+  // Filter agents by selected tags
+  const filteredAgents = agents?.filter(agent => {
+    if (selectedTagFilter.length === 0) return true;
+    // This is a simplified filter - in production you'd fetch agent tags
+    // For now, show all agents when tags are selected
+    return true;
+  }) || [];
   
   // Auto-start tutorial for first-time users with no agents
   useEffect(() => {
@@ -176,21 +259,54 @@ export default function AgentsList() {
               <Button size="lg" data-tutorial="create-button">
                 <Plus className="mr-2 h-5 w-5" />
                 Create New Agent
-              </Button>
-            </Link>
+              </Button>            </Link>
           </div>
         </div>
         
-        {/* Agents List */}
+        {/* Tag Filter and Bulk Select */}
+        {agents && agents.length > 0 && (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedAgentIds.length === agents.length && agents.length > 0}
+                  onCheckedChange={handleSelectAll}
+                  id="select-all"
+                />
+                <label htmlFor="select-all" className="text-sm cursor-pointer">
+                  Select All
+                </label>
+              </div>
+              <TagFilter
+                selectedTags={selectedTagFilter}
+                onTagsChange={setSelectedTagFilter}
+              />
+            </div>
+            {selectedAgentIds.length > 0 && (
+              <Badge variant="secondary">
+                {selectedAgentIds.length} selected
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {/* Loading State */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : agents && agents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {agents.map((agent) => (
-              <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
+            {filteredAgents.map((agent) => (
+              <Card key={agent.id} className="hover:shadow-lg transition-shadow relative">
+                <div className="absolute top-3 left-3 z-10">
+                  <Checkbox
+                    checked={selectedAgentIds.includes(agent.id)}
+                    onCheckedChange={() => handleSelectAgent(agent.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <CardHeader className="pl-12">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <Bot className="h-5 w-5 text-primary" />
@@ -228,12 +344,26 @@ export default function AgentsList() {
                         </span>
                       </div>
                     )}
+                    
+                    {/* Tags */}
+                    <div className="pt-2">
+                      <AgentTagBadges agentConfigId={agent.id} />
+                    </div>
+                    
                     <div className="flex gap-2 pt-2">
                       <Link href={`/agent/${agent.id}`} className="flex-1">
                         <Button variant="default" size="sm" className="w-full">
                           View Code
                         </Button>
                       </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShowVersionHistory(agent.id, agent.name)}
+                        title="Version history"
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -274,6 +404,40 @@ export default function AgentsList() {
           </Card>
         )}
       </div>
+      
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedAgentIds.length}
+        onClearSelection={() => setSelectedAgentIds([])}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        onBulkTag={() => setBulkTagDialogOpen(true)}
+      />
+      
+      {/* Bulk Tag Dialog */}
+      <BulkTagDialog
+        open={bulkTagDialogOpen}
+        onOpenChange={setBulkTagDialogOpen}
+        selectedAgentIds={selectedAgentIds}
+        onSuccess={() => {
+          setSelectedAgentIds([]);
+          refetch();
+        }}
+      />
+      
+      {/* Version History Dialog */}
+      {selectedAgentForHistory && (
+        <VersionHistory
+          open={versionHistoryOpen}
+          onOpenChange={setVersionHistoryOpen}
+          agentConfigId={selectedAgentForHistory.id}
+          agentName={selectedAgentForHistory.name}
+          onRollback={() => {
+            refetch();
+          }}
+        />
+      )}
+      
       <TutorialOverlay />
     </div>
   );

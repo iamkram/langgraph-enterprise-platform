@@ -127,3 +127,51 @@ export const dailyMetrics = mysqlTable("daily_metrics", {
 
 export type DailyMetric = typeof dailyMetrics.$inferSelect;
 export type InsertDailyMetric = typeof dailyMetrics.$inferInsert;
+
+// Agent version history table
+export const agentVersions = mysqlTable("agent_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  agentConfigId: int("agent_config_id").notNull().references(() => agentConfigs.id, { onDelete: "cascade" }),
+  versionNumber: int("version_number").notNull(), // Incremental version number
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  agentType: varchar("agent_type", { length: 50 }).notNull(),
+  workerAgents: text("worker_agents"),
+  tools: text("tools"),
+  securityEnabled: int("security_enabled").notNull(),
+  checkpointingEnabled: int("checkpointing_enabled").notNull(),
+  modelName: varchar("model_name", { length: 100 }).notNull(),
+  systemPrompt: text("system_prompt"),
+  maxIterations: int("max_iterations").notNull(),
+  maxRetries: int("max_retries").notNull(),
+  changeDescription: text("change_description"), // What changed in this version
+  createdBy: int("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AgentVersion = typeof agentVersions.$inferSelect;
+export type InsertAgentVersion = typeof agentVersions.$inferInsert;
+
+// Tags table
+export const tags = mysqlTable("tags", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  color: varchar("color", { length: 7 }).default("#3b82f6").notNull(), // Hex color code
+  description: text("description"),
+  createdBy: int("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
+
+// Agent-Tag junction table (many-to-many)
+export const agentTags = mysqlTable("agent_tags", {
+  id: int("id").autoincrement().primaryKey(),
+  agentConfigId: int("agent_config_id").notNull().references(() => agentConfigs.id, { onDelete: "cascade" }),
+  tagId: int("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AgentTag = typeof agentTags.$inferSelect;
+export type InsertAgentTag = typeof agentTags.$inferInsert;
