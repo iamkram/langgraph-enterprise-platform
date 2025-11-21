@@ -137,3 +137,26 @@
 - [x] Write database schema documentation
 - [x] Document security architecture
 - [x] Create deployment guide with diagrams
+
+
+---
+
+# Interactive Architecture Viewer
+
+## Core Features
+- [x] Create Architecture Explorer page
+- [x] Add diagram navigation (tabs/dropdown)
+- [x] Display architecture diagrams
+- [x] Implement clickable component hotspots
+- [x] Create component detail sidebar
+- [x] Add component documentation display
+- [x] Show component metrics and status
+- [x] Display component dependencies
+
+## Advanced Features
+- [x] Add search functionality for components
+- [x] Implement filtering by layer/type
+- [ ] Add zoom and pan controls
+- [ ] Create breadcrumb navigation
+- [ ] Add export functionality
+- [x] Implement dark mode support

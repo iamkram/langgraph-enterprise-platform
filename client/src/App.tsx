@@ -9,6 +9,7 @@ import CreateAgent from "./pages/CreateAgent";
 import AgentDetail from "./pages/AgentDetail";
 import Analytics from "./pages/Analytics";
 import Templates from "./pages/Templates";
+import ArchitectureExplorer from "./pages/ArchitectureExplorer";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -17,9 +18,8 @@ function Router() {
       <Route path={"/"} component={AgentsList} />
       <Route path="/create" component={CreateAgent} />
       <Route path="/agent/:id" component={AgentDetail} />
-      <Route path="/analytics" component={Analytics} />
-      <Route path="/templates" component={Templates} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path="/analytics" component={Analytics} />      <Route path={"/templates"} component={Templates} />
+      <Route path={"/architecture"} component={ArchitectureExplorer} />      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

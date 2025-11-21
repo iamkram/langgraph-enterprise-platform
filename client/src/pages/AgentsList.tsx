@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Plus, Loader2, Bot, Trash2, Sparkles } from "lucide-react";
+import { Plus, Loader2, Bot, Trash2, Sparkles, Layers } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
@@ -78,6 +78,12 @@ export default function AgentsList() {
             <Link href="/analytics">
               <Button size="lg" variant="outline">
                 View Analytics
+              </Button>
+            </Link>
+            <Link href="/architecture">
+              <Button size="lg" variant="outline">
+                <Layers className="mr-2 h-5 w-5" />
+                Architecture
               </Button>
             </Link>
             <Link href="/create">
