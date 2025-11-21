@@ -249,3 +249,15 @@
 - [x] Implement getUsageByDateRange with actual database queries
 - [x] Implement getCostByAgent with usage_logs aggregation
 - [x] Add proper cost calculation logic ($0.01 per 1000 tokens)
+
+
+---
+
+# Debug Test Failures
+
+## Agent Creation Issues (10 failing tests, 81% pass rate)
+- [x] Investigate why agentId returns null/undefined in tests (test pollution from other test files)
+- [x] Add beforeAll cleanup to phase6 tests
+- [ ] Fix test isolation between test files (exportImport now failing due to cleanup)
+- [ ] Consider using separate test databases or transactions for isolation
+- [ ] Ensure all 53 tests pass (currently 43/53)

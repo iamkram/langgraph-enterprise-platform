@@ -12,7 +12,7 @@
  * Target: 80%+ code coverage
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 import type { User } from "../drizzle/schema";
@@ -43,6 +43,10 @@ function createAuthContext(role: "admin" | "user" = "user"): TrpcContext {
 }
 
 describe("Phase 6: Comprehensive Testing Suite", () => {
+  beforeAll(async () => {
+    await cleanupTestData();
+  });
+  
   afterAll(async () => {
     await cleanupTestData();
   });
