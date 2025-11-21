@@ -230,3 +230,22 @@
 - [x] Implement agents.generateCode endpoint
 - [ ] Fix test data creation - agentId not being returned properly
 - [ ] Update tests to match actual API response structure
+
+
+---
+
+# Final Polish
+
+## Fix Agent Creation Response
+- [x] Update agents.create to return agentId field
+- [ ] Verify all remaining tests pass (44/53 passing, 83%)
+
+## Test Coverage
+- [x] Install @vitest/coverage-v8
+- [x] Configure coverage thresholds in vitest.config.ts (80% target)
+- [ ] Generate coverage report (run pnpm test:coverage)
+
+## Real Analytics Implementation
+- [x] Implement getUsageByDateRange with actual database queries
+- [x] Implement getCostByAgent with usage_logs aggregation
+- [x] Add proper cost calculation logic ($0.01 per 1000 tokens)

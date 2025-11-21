@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, agentConfigs, generatedCode, InsertAgentConfig, webhookEvents, usageLogs, dailyMetrics } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -283,17 +283,47 @@ export async function getUsageByDateRange(userId: number, startDate: Date, endDa
   const db = await getDb();
   if (!db) return [];
   
-  // This is a placeholder - implement actual query based on your usage logs schema
-  return [];
+  const results = await db
+    .select()
+    .from(usageLogs)
+    .where(
+      and(
+        eq(usageLogs.userId, userId),
+        gte(usageLogs.createdAt, startDate),
+        lte(usageLogs.createdAt, endDate)
+      )
+    )
+    .orderBy(desc(usageLogs.createdAt));
+  
+  return results;
 }
 
 export async function getCostByAgent(agentId: number, startDate: Date, endDate: Date) {
   const db = await getDb();
   if (!db) return { totalCost: 0, breakdown: [] };
   
-  // This is a placeholder - implement actual cost calculation based on usage logs
+  const results = await db
+    .select()
+    .from(usageLogs)
+    .where(
+      and(
+        eq(usageLogs.agentConfigId, agentId),
+        gte(usageLogs.createdAt, startDate),
+        lte(usageLogs.createdAt, endDate)
+      )
+    );
+  
+  // Calculate total cost based on token usage
+  // Rough estimate: $0.01 per 1000 tokens
+  const totalTokens = results.reduce((sum, log) => sum + (log.tokensUsed || 0), 0);
+  const totalCost = (totalTokens / 1000) * 0.01;
+  
   return {
-    totalCost: 0,
-    breakdown: [],
+    totalCost: parseFloat(totalCost.toFixed(4)),
+    breakdown: results.map(log => ({
+      date: log.createdAt,
+      tokens: log.tokensUsed || 0,
+      cost: parseFloat((((log.tokensUsed || 0) / 1000) * 0.01).toFixed(4)),
+    })),
   };
 }

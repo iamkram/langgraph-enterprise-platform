@@ -88,7 +88,7 @@ export const appRouter = router({
           await saveGeneratedCode(agentId, "worker", workerCode);
         }
         
-        return { id: agentId, success: true };
+        return { id: agentId, agentId: agentId, success: true };
       }),
     
     update: protectedProcedure
@@ -255,7 +255,7 @@ export const appRouter = router({
           await saveGeneratedCode(agentId, "worker", workerCode);
         }
         
-        return { id: agentId, success: true };
+        return { id: agentId, agentId: agentId, success: true };
       }),
   }),
 
