@@ -160,3 +160,16 @@
 - [ ] Create breadcrumb navigation
 - [ ] Add export functionality
 - [x] Implement dark mode support
+
+
+---
+
+# Rebranding to "Agentic Integration Maker" (AIM)
+
+- [x] Update APP_TITLE constant to "Agentic Integration Maker"
+- [x] Update APP_LOGO to target icon 🎯
+- [x] Update all page titles and headings
+- [x] Update all descriptions and taglines
+- [x] Update README.md with new branding
+- [ ] Update documentation references
+- [ ] User must update VITE_APP_TITLE in Settings UI to "Agentic Integration Maker"

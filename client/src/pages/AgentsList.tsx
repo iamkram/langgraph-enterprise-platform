@@ -38,7 +38,7 @@ export default function AgentsList() {
           <CardHeader>
             <CardTitle>Welcome to LangGraph Agent Builder</CardTitle>
             <CardDescription>
-              Create and manage LangGraph agents with our intuitive form-based interface
+              Create and manage intelligent agent integrations with our intuitive form-based interface
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -65,7 +65,7 @@ export default function AgentsList() {
           <div>
             <h1 className="text-4xl font-bold mb-2">LangGraph Agent Builder</h1>
             <p className="text-muted-foreground">
-              Create, manage, and generate code for your LangGraph agents
+              Create, manage, and generate code for your intelligent agent integrations
             </p>
           </div>
           <div className="flex gap-3">

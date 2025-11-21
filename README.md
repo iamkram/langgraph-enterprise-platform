@@ -1,6 +1,6 @@
-# Enterprise LangGraph Agent Scaffolding Platform
+# Agentic Integration Maker (AIM) 🎯
 
-**Production-ready platform for creating, managing, and deploying LangGraph agents at enterprise scale**
+**Production-ready platform for creating, managing, and deploying intelligent agent integrations at enterprise scale**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
@@ -9,7 +9,7 @@
 
 ## 🎯 Overview
 
-A complete enterprise-grade scaffolding platform combining form-based agent configuration, LangGraph 1.0 supervisor orchestration, PostgreSQL checkpointing, and multi-layer security controls. Handles 100+ concurrent agents with production-ready deployment on AWS ECS Fargate.
+A complete enterprise-grade platform combining form-based agent configuration, LangGraph 1.0 supervisor orchestration, PostgreSQL checkpointing, and multi-layer security controls. Handles 100+ concurrent agents with production-ready deployment on AWS ECS Fargate.
 
 **Key Features:**
 - 🎨 **Form-Based UI** - Multi-step wizard for agent creation (not conversational)
@@ -80,7 +80,7 @@ A complete enterprise-grade scaffolding platform combining form-based agent conf
 ```bash
 # Clone repository
 git clone https://github.com/iamkram/langgraph-enterprise-platform.git
-cd langgraph-enterprise-platform
+cd langgraph-enterprise-platform  # AIM - Agentic Integration Maker
 
 # Install dependencies
 pnpm install
