@@ -1,10 +1,14 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { ensureTestUser } from "./testUtils";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
-function createAuthContext(userId: number = 1): TrpcContext {
+// Use unique user ID for this test suite to avoid conflicts
+const EXPORT_IMPORT_TEST_USER_ID = 200;
+
+function createAuthContext(userId: number = EXPORT_IMPORT_TEST_USER_ID): TrpcContext {
   const user: AuthenticatedUser = {
     id: userId,
     openId: `test-user-${userId}`,
@@ -33,6 +37,11 @@ describe("Agent Export/Import", () => {
   let testAgentId: number;
   const ctx = createAuthContext();
   const caller = appRouter.createCaller(ctx);
+
+  beforeAll(async () => {
+    // Ensure test user exists in database
+    await ensureTestUser(EXPORT_IMPORT_TEST_USER_ID, `test-user-${EXPORT_IMPORT_TEST_USER_ID}`, `user${EXPORT_IMPORT_TEST_USER_ID}@example.com`, `Test User ${EXPORT_IMPORT_TEST_USER_ID}`);
+  });
 
   beforeEach(async () => {
     // Create a test agent

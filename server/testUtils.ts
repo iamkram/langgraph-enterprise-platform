@@ -6,7 +6,7 @@ import { users, agentConfigs } from '../drizzle/schema';
  * Test utilities for database cleanup and test data management
  */
 
-export async function cleanupTestData() {
+export async function cleanupTestData(userId?: number) {
   const db = await getDb();
   if (!db) {
     console.warn('[Test] Database not available for cleanup');
@@ -14,11 +14,15 @@ export async function cleanupTestData() {
   }
 
   try {
-    // Delete agent configs (this should cascade to related data)
-    await db.delete(agentConfigs);
-    // Don't delete users as they might be needed for auth
-    
-    console.log('[Test] Database cleanup completed');
+    if (userId) {
+      // Delete only data for specific user
+      await db.delete(agentConfigs).where(eq(agentConfigs.userId, userId));
+      console.log(`[Test] Database cleanup completed for user ${userId}`);
+    } else {
+      // Delete all agent configs (use with caution)
+      await db.delete(agentConfigs);
+      console.log('[Test] Database cleanup completed (all data)');
+    }
   } catch (error) {
     console.error('[Test] Database cleanup failed:', error);
     throw error;
@@ -35,6 +39,39 @@ export async function cleanupTestUser(openId: string) {
     console.log(`[Test] Cleaned up test user: ${openId}`);
   } catch (error) {
     console.error('[Test] User cleanup failed:', error);
+  }
+}
+
+export async function ensureTestUser(userId: number, openId: string, email: string, name: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn('[Test] Database not available for user creation');
+    return;
+  }
+
+  try {
+    // Insert or update test user
+    await db.insert(users).values({
+      id: userId,
+      openId,
+      email,
+      name,
+      loginMethod: 'manus',
+      role: 'user',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
+    }).onDuplicateKeyUpdate({
+      set: {
+        email,
+        name,
+        lastSignedIn: new Date(),
+      },
+    });
+    console.log(`[Test] Ensured test user exists: ${openId} (ID: ${userId})`);
+  } catch (error) {
+    console.error('[Test] Failed to ensure test user:', error);
+    throw error;
   }
 }
 

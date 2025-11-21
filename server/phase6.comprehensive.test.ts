@@ -16,15 +16,18 @@ import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 import type { User } from "../drizzle/schema";
-import { cleanupTestData } from "./testUtils";
+import { cleanupTestData, ensureTestUser } from "./testUtils";
+
+// Use unique user ID for this test suite to avoid conflicts with other tests
+const PHASE6_TEST_USER_ID = 100;
 
 // Helper to create authenticated context
 function createAuthContext(role: "admin" | "user" = "user"): TrpcContext {
   const user: User = {
-    id: 1,
-    openId: "test-user",
-    email: "test@example.com",
-    name: "Test User",
+    id: PHASE6_TEST_USER_ID,
+    openId: "phase6-test-user",
+    email: "phase6-test@example.com",
+    name: "Phase 6 Test User",
     loginMethod: "manus",
     role,
     createdAt: new Date(),
@@ -44,7 +47,10 @@ function createAuthContext(role: "admin" | "user" = "user"): TrpcContext {
 
 describe("Phase 6: Comprehensive Testing Suite", () => {
   beforeAll(async () => {
-    await cleanupTestData();
+    // Ensure test user exists in database
+    await ensureTestUser(PHASE6_TEST_USER_ID, "phase6-test-user", "phase6-test@example.com", "Phase 6 Test User");
+    // Clean up only this test suite's data
+    await cleanupTestData(PHASE6_TEST_USER_ID);
   });
   
   afterAll(async () => {

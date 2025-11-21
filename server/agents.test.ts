@@ -1,15 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { ensureTestUser } from "./testUtils";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
+// Use unique user ID for this test suite to avoid conflicts
+const AGENTS_TEST_USER_ID = 300;
+
 function createAuthContext(): { ctx: TrpcContext } {
   const user: AuthenticatedUser = {
-    id: 1,
-    openId: "test-user",
-    email: "test@example.com",
-    name: "Test User",
+    id: AGENTS_TEST_USER_ID,
+    openId: "agents-test-user",
+    email: "agents-test@example.com",
+    name: "Agents Test User",
     loginMethod: "manus",
     role: "user",
     createdAt: new Date(),
@@ -32,6 +36,11 @@ function createAuthContext(): { ctx: TrpcContext } {
 }
 
 describe("agents router", () => {
+  beforeAll(async () => {
+    // Ensure test user exists in database
+    await ensureTestUser(AGENTS_TEST_USER_ID, "agents-test-user", "agents-test@example.com", "Agents Test User");
+  });
+
   it("should create an agent configuration", async () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);

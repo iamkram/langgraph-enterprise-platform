@@ -15,7 +15,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["server/**/*.test.ts", "server/**/*.spec.ts"],
+    passWithNoTests: false,
     coverage: {
+      all: true,
+      skipFull: false,
       provider: "v8",
       reporter: ["text", "json", "html"],
       include: ["server/**/*.ts"],
@@ -30,6 +33,8 @@ export default defineConfig({
         functions: 80,
         branches: 80,
         statements: 80,
+        autoUpdate: false,
+        perFile: false,
       },
     },
   },
