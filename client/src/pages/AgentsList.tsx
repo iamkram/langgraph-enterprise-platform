@@ -36,7 +36,7 @@ export default function AgentsList() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to LangGraph Agent Builder</CardTitle>
+            <CardTitle>Welcome to Agentic Integration Maker (AIM)</CardTitle>
             <CardDescription>
               Create and manage intelligent agent integrations with our intuitive form-based interface
             </CardDescription>
@@ -63,7 +63,7 @@ export default function AgentsList() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">LangGraph Agent Builder</h1>
+            <h1 className="text-4xl font-bold mb-2">Agentic Integration Maker (AIM)</h1>
             <p className="text-muted-foreground">
               Create, manage, and generate code for your intelligent agent integrations
             </p>
@@ -168,7 +168,7 @@ export default function AgentsList() {
               <Bot className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-xl font-semibold mb-2">No Agents Yet</h3>
               <p className="text-muted-foreground mb-6">
-                Get started by creating your first LangGraph agent
+                Get started by creating your first intelligent agent integration
               </p>
               <Link href="/create">
                 <Button>
