@@ -12,10 +12,11 @@
  * Target: 80%+ code coverage
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 import type { User } from "../drizzle/schema";
+import { cleanupTestData } from "./testUtils";
 
 // Helper to create authenticated context
 function createAuthContext(role: "admin" | "user" = "user"): TrpcContext {
@@ -42,6 +43,9 @@ function createAuthContext(role: "admin" | "user" = "user"): TrpcContext {
 }
 
 describe("Phase 6: Comprehensive Testing Suite", () => {
+  afterAll(async () => {
+    await cleanupTestData();
+  });
   describe("Agent CRUD Operations", () => {
     it("should create agent with valid configuration", async () => {
       const ctx = createAuthContext();
@@ -98,6 +102,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Test",
         agentType: "supervisor",
         model: "gpt-4o-mini",
+        modelName: "gpt-4o-mini",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
         workers: [],
         tools: [],
         securitySettings: {
@@ -124,6 +133,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Original",
         agentType: "supervisor",
         model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
         workers: [],
         tools: [],
         securitySettings: {
@@ -156,6 +170,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Will be deleted",
         agentType: "supervisor",
         model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
         workers: [],
         tools: [],
         securitySettings: {
@@ -183,6 +202,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Test approval workflow",
         agentType: "supervisor",
         model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: true,
+        checkpointingEnabled: true,
         workers: [],
         tools: [],
         securitySettings: {
@@ -284,6 +308,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
           description: "Test",
           agentType: "supervisor",
           model: "gpt-4o",
+          modelName: "gpt-4o",
+          maxIterations: 10,
+          maxRetries: 3,
+          securityEnabled: false,
+          checkpointingEnabled: false,
           workers: [],
           tools: [],
           securitySettings: {
@@ -314,6 +343,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Analyzes stock market trends and provides investment recommendations",
         agentType: "supervisor",
         model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
         workers: [],
         tools: [],
         securitySettings: {
@@ -403,6 +437,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
           description: `Test concurrent creation ${i}`,
           agentType: "supervisor",
           model: "gpt-4o-mini",
+          modelName: "gpt-4o-mini",
+          maxIterations: 10,
+          maxRetries: 3,
+          securityEnabled: false,
+          checkpointingEnabled: false,
           workers: [],
           tools: [],
           securitySettings: {
@@ -465,6 +504,11 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         description: "Test",
         agentType: "supervisor",
         model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
         workers: [
           { name: "worker1", description: "First worker", tools: [] },
           { name: "worker2", description: "Second worker", tools: [] },

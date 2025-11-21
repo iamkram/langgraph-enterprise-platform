@@ -4,14 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAgentFormStore } from "@/stores/agentFormStore";
-import { SmartTagSuggestions } from "@/components/SmartTagSuggestions";
 
 export default function Step4SecuritySettings() {
   const {
-    name,
-    description,
-    agentType,
-    tools,
     securityEnabled,
     checkpointingEnabled,
     modelName,
@@ -25,11 +20,6 @@ export default function Step4SecuritySettings() {
     setMaxIterations,
     setMaxRetries,
   } = useAgentFormStore();
-  
-  const handleApplyTags = (tagIds: number[]) => {
-    // Tags will be applied when creating the agent
-    console.log('Suggested tag IDs:', tagIds);
-  };
   
   return (
     <div className="space-y-6">
@@ -123,21 +113,6 @@ export default function Step4SecuritySettings() {
             Maximum error retries
           </p>
         </div>
-      </div>
-      
-      {/* Smart Tag Suggestions */}
-      <div className="space-y-2">
-        <Label>Suggested Tags</Label>
-        <p className="text-sm text-muted-foreground mb-2">
-          AI-powered tag suggestions based on your agent configuration
-        </p>
-        <SmartTagSuggestions 
-          agentName={name}
-          agentDescription={description}
-          agentType={agentType}
-          tools={tools.map(t => t.name)}
-          onApplyTags={handleApplyTags}
-        />
       </div>
     </div>
   );

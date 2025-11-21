@@ -22,27 +22,6 @@
       "when": 1763599357513,
       "tag": "0002_wide_raider",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1763736650641,
-      "tag": "0003_marvelous_proudstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1763746609249,
-      "tag": "0004_dusty_karen_page",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1763749445088,
-      "tag": "0005_good_night_nurse",
-      "breakpoints": true
     }
   ]
 }
