@@ -17,15 +17,8 @@ export default function AgentsList() {
   const { data: agents, isLoading, refetch } = trpc.agents.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
-
-  // Auto-start tutorial for first-time users with no agents
-  useEffect(() => {
-    if (isAuthenticated && !isLoading && agents && agents.length === 0 && !isCompleted) {
-      // Delay to allow page to render
-      const timer = setTimeout(() => startTutorial(), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, isLoading, agents, isCompleted, startTutorial]);
+  
+  const utils = trpc.useUtils();
   const deleteMutation = trpc.agents.delete.useMutation({
     onSuccess: () => {
       toast.success("Agent deleted successfully");
@@ -36,35 +29,6 @@ export default function AgentsList() {
     },
   });
   
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Welcome to Agentic Integration Maker (AIM)</CardTitle>
-            <CardDescription>
-              Create and manage intelligent agent integrations with our intuitive form-based interface
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <a href={getLoginUrl()}>Sign In to Get Started</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  const utils = trpc.useUtils();
   const importMutation = trpc.agents.import.useMutation({
     onSuccess: () => {
       toast.success("Agent imported successfully");
@@ -123,6 +87,43 @@ export default function AgentsList() {
     };
     input.click();
   };
+  
+  // Auto-start tutorial for first-time users with no agents
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && agents && agents.length === 0 && !isCompleted) {
+      // Delay to allow page to render
+      const timer = setTimeout(() => startTutorial(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, isLoading, agents, isCompleted, startTutorial]);
+  
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Welcome to Agentic Integration Maker (AIM)</CardTitle>
+            <CardDescription>
+              Create and manage intelligent agent integrations with our intuitive form-based interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <a href={getLoginUrl()}>Sign In to Get Started</a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
