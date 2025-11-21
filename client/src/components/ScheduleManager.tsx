@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Clock, Play, Pause, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
+import { SCHEDULE_TEMPLATES, getTemplatesByCategory } from "@shared/scheduleTemplates";
 
 interface ScheduleManagerProps {
   agentConfigId: number;
@@ -24,6 +25,7 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
   const [input, setInput] = useState("");
   const [notifyOnCompletion, setNotifyOnCompletion] = useState(false);
   const [showHistory, setShowHistory] = useState<number | null>(null);
+  const [showTemplates, setShowTemplates] = useState(true);
   
   const { data: schedules, isLoading, refetch } = trpc.schedules.list.useQuery(undefined, {
     enabled: open,
@@ -115,6 +117,87 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Template Selection */}
+                {showTemplates && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Quick Templates</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowTemplates(false)}
+                      >
+                        Custom Expression
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium mb-2">Common Schedules</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {getTemplatesByCategory("common").map((template) => (
+                            <Button
+                              key={template.id}
+                              variant="outline"
+                              className="h-auto flex-col items-start p-3 text-left"
+                              onClick={() => {
+                                setCronExpression(template.cronExpression);
+                                setName(template.name);
+                                setShowTemplates(false);
+                              }}
+                            >
+                              <div className="font-medium text-sm">{template.name}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {template.description}
+                              </div>
+                              <code className="text-xs bg-muted px-1 rounded mt-1">
+                                {template.cronExpression}
+                              </code>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm font-medium mb-2">Advanced Schedules</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {getTemplatesByCategory("advanced").map((template) => (
+                            <Button
+                              key={template.id}
+                              variant="outline"
+                              className="h-auto flex-col items-start p-3 text-left"
+                              onClick={() => {
+                                setCronExpression(template.cronExpression);
+                                setName(template.name);
+                                setShowTemplates(false);
+                              }}
+                            >
+                              <div className="font-medium text-sm">{template.name}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {template.description}
+                              </div>
+                              <code className="text-xs bg-muted px-1 rounded mt-1">
+                                {template.cronExpression}
+                              </code>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {!showTemplates && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowTemplates(true)}
+                    className="w-full"
+                  >
+                    ← Back to Templates
+                  </Button>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="cron">Cron Expression</Label>
                   <Input

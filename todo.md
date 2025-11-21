@@ -327,3 +327,30 @@
 - [ ] Fix version comparison test async issues
 - [ ] Fix tag suggestions test with mocks
 - [ ] Run all tests and verify 100% passing
+
+
+---
+
+# Follow-up Items (Current Sprint)
+
+## Complete Remaining Action Items
+- [x] Version comparison UI integration (already integrated in VersionHistory dialog)
+- [x] Smart tag suggestions integration (added to CreateAgent wizard Step 4)
+- [x] Tutorial auto-start fix (already implemented in AgentsList)
+- [ ] Fix 17 failing tests with database cleanup utilities (deferred)
+
+## Real-time Schedule Monitoring Dashboard
+- [x] Create ScheduleDashboard page component
+- [x] Add route for /schedules in App.tsx
+- [x] Display active schedules with status
+- [x] Show success rate metrics and charts
+- [x] Implement live updates with polling (30s refresh)
+- [ ] Add navigation link in DashboardLayout sidebar (optional)
+
+## Schedule Templates System
+- [x] Define common schedule templates (11 templates: hourly, daily, weekly, monthly, etc.)
+- [x] Create scheduleTemplates.ts with template definitions
+- [x] Add template selection to ScheduleManager
+- [x] Implement one-click template application
+- [ ] Add custom template creation (future enhancement)
+- [ ] Store user templates in database (future enhancement)
