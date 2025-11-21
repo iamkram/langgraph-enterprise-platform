@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="90" fill="#2563eb"/>
+  <circle cx="100" cy="100" r="70" fill="white"/>
+  
+  <!-- Middle ring -->
+  <circle cx="100" cy="100" r="55" fill="#2563eb"/>
+  <circle cx="100" cy="100" r="35" fill="white"/>
+  
+  <!-- Center bullseye -->
+  <circle cx="100" cy="100" r="20" fill="#2563eb"/>
+</svg>
