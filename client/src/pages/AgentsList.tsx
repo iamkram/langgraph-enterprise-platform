@@ -12,10 +12,30 @@ import { TutorialOverlay } from "@/components/TutorialOverlay";
 import { useEffect } from "react";
 
 export default function AgentsList() {
+  // All hooks MUST be called before any early returns
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const { isCompleted, startTutorial } = useTutorial();
   const { data: agents, isLoading, refetch } = trpc.agents.list.useQuery(undefined, {
     enabled: isAuthenticated,
+  });
+  const utils = trpc.useUtils();
+  const deleteMutation = trpc.agents.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Agent deleted successfully");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete agent: ${error.message}`);
+    },
+  });
+  const importMutation = trpc.agents.import.useMutation({
+    onSuccess: () => {
+      toast.success("Agent imported successfully");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to import agent: ${error.message}`);
+    },
   });
 
   // Auto-start tutorial for first-time users with no agents
@@ -26,16 +46,8 @@ export default function AgentsList() {
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, isLoading, agents, isCompleted, startTutorial]);
-  const deleteMutation = trpc.agents.delete.useMutation({
-    onSuccess: () => {
-      toast.success("Agent deleted successfully");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete agent: ${error.message}`);
-    },
-  });
-  
+
+  // Early returns AFTER all hooks
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -63,17 +75,6 @@ export default function AgentsList() {
       </div>
     );
   }
-  
-  const utils = trpc.useUtils();
-  const importMutation = trpc.agents.import.useMutation({
-    onSuccess: () => {
-      toast.success("Agent imported successfully");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(`Failed to import agent: ${error.message}`);
-    },
-  });
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to delete this agent?")) {
