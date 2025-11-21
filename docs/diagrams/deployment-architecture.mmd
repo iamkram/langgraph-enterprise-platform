@@ -1,0 +1,134 @@
+graph TB
+    subgraph "Internet"
+        Users[Users/Clients]
+    end
+
+    subgraph "AWS Cloud - us-east-1"
+        subgraph "VPC - 10.0.0.0/16"
+            subgraph "Public Subnets"
+                subgraph "AZ-1a"
+                    ALB1[Application<br/>Load Balancer]
+                    NAT1[NAT Gateway]
+                end
+                subgraph "AZ-1b"
+                    ALB2[ALB Standby]
+                    NAT2[NAT Gateway]
+                end
+            end
+
+            subgraph "Private Subnets - Application Tier"
+                subgraph "AZ-1a Private"
+                    ECS1[ECS Fargate<br/>Task 1-3<br/>Auto-Scaling]
+                end
+                subgraph "AZ-1b Private"
+                    ECS2[ECS Fargate<br/>Task 4-6<br/>Auto-Scaling]
+                end
+            end
+
+            subgraph "Private Subnets - Data Tier"
+                subgraph "AZ-1a Data"
+                    RDS1[(RDS PostgreSQL<br/>Primary<br/>pgvector)]
+                end
+                subgraph "AZ-1b Data"
+                    RDS2[(RDS PostgreSQL<br/>Standby<br/>Multi-AZ)]
+                end
+            end
+        end
+
+        subgraph "Shared Services"
+            S3[S3 Bucket<br/>Generated Code<br/>Versioning Enabled]
+            ECR[ECR Registry<br/>Docker Images]
+            CloudWatch[CloudWatch<br/>Logs & Metrics]
+            CodeDeploy[CodeDeploy<br/>Blue-Green<br/>Deployment]
+        end
+
+        subgraph "Security & Networking"
+            WAF[AWS WAF<br/>DDoS Protection]
+            SG1[Security Group<br/>ALB]
+            SG2[Security Group<br/>ECS Tasks]
+            SG3[Security Group<br/>RDS]
+            IAM[IAM Roles<br/>Task Execution<br/>Task Role]
+        end
+    end
+
+    subgraph "External Services"
+        Jira[Jira Cloud<br/>Webhooks]
+        OpenAI[OpenAI API<br/>LLM Execution]
+        LangSmith[LangSmith<br/>Tracing]
+    end
+
+    subgraph "CI/CD"
+        GitHub[GitHub<br/>Source Code]
+        Actions[GitHub Actions<br/>Build & Deploy]
+    end
+
+    %% User connections
+    Users -->|HTTPS| WAF
+    WAF --> ALB1
+    WAF --> ALB2
+
+    %% Load balancer connections
+    ALB1 --> ECS1
+    ALB1 --> ECS2
+    ALB2 --> ECS1
+    ALB2 --> ECS2
+
+    %% ECS to data tier
+    ECS1 --> RDS1
+    ECS2 --> RDS1
+    ECS1 -.->|Failover| RDS2
+    ECS2 -.->|Failover| RDS2
+
+    %% ECS to shared services
+    ECS1 --> S3
+    ECS2 --> S3
+    ECS1 --> CloudWatch
+    ECS2 --> CloudWatch
+
+    %% ECS to external services
+    ECS1 -->|HTTPS| Jira
+    ECS2 -->|HTTPS| Jira
+    ECS1 -->|HTTPS| OpenAI
+    ECS2 -->|HTTPS| OpenAI
+    ECS1 -->|HTTPS| LangSmith
+    ECS2 -->|HTTPS| LangSmith
+
+    %% NAT Gateway for outbound
+    ECS1 --> NAT1
+    ECS2 --> NAT2
+
+    %% Security groups
+    SG1 -.->|Allows 443| ALB1
+    SG1 -.->|Allows 443| ALB2
+    SG2 -.->|Allows 3000| ECS1
+    SG2 -.->|Allows 3000| ECS2
+    SG3 -.->|Allows 5432| RDS1
+    SG3 -.->|Allows 5432| RDS2
+
+    %% IAM
+    IAM -.->|Grants| ECS1
+    IAM -.->|Grants| ECS2
+
+    %% CI/CD flow
+    GitHub --> Actions
+    Actions -->|Build| ECR
+    Actions -->|Deploy| CodeDeploy
+    CodeDeploy --> ECS1
+    CodeDeploy --> ECS2
+
+    %% Styling
+    classDef public fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef private fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef data fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef shared fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef security fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef external fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef cicd fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class ALB1,ALB2,NAT1,NAT2 public
+    class ECS1,ECS2 private
+    class RDS1,RDS2 data
+    class S3,ECR,CloudWatch,CodeDeploy shared
+    class WAF,SG1,SG2,SG3,IAM security
+    class Jira,OpenAI,LangSmith external
+    class GitHub,Actions cicd

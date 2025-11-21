@@ -116,3 +116,24 @@
 - [ ] Create CI/CD setup guide
 - [ ] Document execution engine API
 - [ ] Update README with new features
+
+
+---
+
+# Architecture Documentation
+
+## Visual Diagrams
+- [x] Create system architecture diagram (Mermaid)
+- [x] Create data flow diagram
+- [x] Create deployment architecture diagram
+- [x] Create security architecture diagram
+- [x] Create agent execution flow diagram
+- [x] Generate PNG files from all diagrams
+
+## Technical Documentation
+- [x] Write system overview document
+- [x] Document all components and their interactions
+- [x] Create API reference documentation
+- [x] Write database schema documentation
+- [x] Document security architecture
+- [x] Create deployment guide with diagrams

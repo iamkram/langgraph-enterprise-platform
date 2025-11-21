@@ -1,0 +1,71 @@
+graph TD
+    Start[User Input] --> Security[Security Validation]
+    
+    Security --> Supervisor[Supervisor Agent<br/>LLM-Powered Routing]
+    
+    Supervisor --> Decision{Route<br/>Decision}
+    
+    Decision -->|Research| Worker1[Research Worker<br/>Market Data Tool]
+    Decision -->|Analysis| Worker2[Analyst Worker<br/>Sentiment + Risk Tools]
+    Decision -->|Writing| Worker3[Writer Worker<br/>Report Generation]
+    Decision -->|Complete| Finish[Final Output]
+    
+    Worker1 --> Tool1[Execute Tool:<br/>Fetch Market Data]
+    Worker2 --> Tool2[Execute Tool:<br/>Calculate Sentiment]
+    Worker3 --> Tool3[Execute Tool:<br/>Generate Report]
+    
+    Tool1 --> State1[Update State:<br/>Add Research Results]
+    Tool2 --> State2[Update State:<br/>Add Analysis]
+    Tool3 --> State3[Update State:<br/>Add Report]
+    
+    State1 --> Checkpoint1[(Save Checkpoint<br/>PostgreSQL)]
+    State2 --> Checkpoint2[(Save Checkpoint<br/>PostgreSQL)]
+    State3 --> Checkpoint3[(Save Checkpoint<br/>PostgreSQL)]
+    
+    Checkpoint1 --> Supervisor
+    Checkpoint2 --> Supervisor
+    Checkpoint3 --> Supervisor
+    
+    Finish --> OutputValidation[Output Security<br/>Validation]
+    OutputValidation --> Log[Log Usage Metrics<br/>Tokens, Cost, Time]
+    Log --> Return[Return to User]
+    
+    subgraph "State Management"
+        StateSchema[State Schema<br/>- Messages: add_messages reducer<br/>- Results: merge reducer<br/>- Iterations: counter<br/>- Errors: list]
+    end
+    
+    subgraph "Retry Logic"
+        Retry{Max<br/>Retries?}
+        Worker1 -.->|Error| Retry
+        Worker2 -.->|Error| Retry
+        Worker3 -.->|Error| Retry
+        Retry -->|No| Supervisor
+        Retry -->|Yes| Error[Return Error]
+    end
+    
+    subgraph "Observability"
+        LangSmith[LangSmith Tracing<br/>- Latency per step<br/>- Token usage<br/>- Cost tracking<br/>- Error rates]
+        Supervisor -.-> LangSmith
+        Worker1 -.-> LangSmith
+        Worker2 -.-> LangSmith
+        Worker3 -.-> LangSmith
+    end
+    
+    %% Styling
+    classDef start fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef supervisor fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    classDef worker fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef tool fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef state fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef checkpoint fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    classDef decision fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef finish fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+
+    class Start,Security start
+    class Supervisor supervisor
+    class Worker1,Worker2,Worker3 worker
+    class Tool1,Tool2,Tool3 tool
+    class State1,State2,State3,StateSchema state
+    class Checkpoint1,Checkpoint2,Checkpoint3 checkpoint
+    class Decision,Retry decision
+    class Finish,Return finish

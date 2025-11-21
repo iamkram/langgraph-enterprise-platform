@@ -1,0 +1,119 @@
+graph TB
+    subgraph "Client Layer"
+        UI[React UI<br/>Next.js 15]
+        Templates[Templates Gallery]
+        Wizard[5-Step Wizard]
+        TestRun[Test Run Dialog]
+    end
+
+    subgraph "API Layer"
+        tRPC[tRPC API Gateway]
+        Auth[OAuth Handler]
+        AgentAPI[Agent CRUD API]
+        ExecAPI[Execution API]
+        AnalyticsAPI[Analytics API]
+        SearchAPI[Search API]
+    end
+
+    subgraph "Business Logic Layer"
+        CodeGen[Code Generator<br/>5 Templates]
+        Validation[Zod Validation]
+        Security[Security Layer<br/>Presidio + NeMo]
+        Executor[Agent Executor<br/>LLM Simulation]
+        JiraClient[Jira Client<br/>HMAC Verification]
+        SemanticSearch[Semantic Search<br/>pgvector]
+    end
+
+    subgraph "Data Layer"
+        DB[(MySQL Database<br/>Agent Configs<br/>Usage Logs<br/>Analytics)]
+        S3[S3 Storage<br/>Generated Code]
+        Cache[Redis Cache<br/>Session Data]
+    end
+
+    subgraph "External Services"
+        Jira[Jira API<br/>Approval Workflow]
+        LangSmith[LangSmith<br/>Tracing & Cost]
+        OpenAI[OpenAI API<br/>LLM Execution]
+    end
+
+    subgraph "Infrastructure Layer - AWS"
+        ALB[Application Load Balancer]
+        ECS[ECS Fargate Cluster<br/>Auto-Scaling]
+        RDS[(RDS PostgreSQL<br/>Multi-AZ)]
+        ECR[ECR Container Registry]
+        CloudWatch[CloudWatch<br/>Monitoring & Alarms]
+        CodeDeploy[CodeDeploy<br/>Blue-Green Deployment]
+    end
+
+    subgraph "CI/CD Pipeline"
+        GitHub[GitHub Repository]
+        Actions[GitHub Actions]
+        Docker[Docker Build]
+    end
+
+    %% Client connections
+    UI --> Templates
+    UI --> Wizard
+    UI --> TestRun
+    UI --> tRPC
+
+    %% API connections
+    tRPC --> Auth
+    tRPC --> AgentAPI
+    tRPC --> ExecAPI
+    tRPC --> AnalyticsAPI
+    tRPC --> SearchAPI
+
+    %% Business logic connections
+    AgentAPI --> CodeGen
+    AgentAPI --> Validation
+    AgentAPI --> JiraClient
+    ExecAPI --> Executor
+    ExecAPI --> Security
+    SearchAPI --> SemanticSearch
+    AnalyticsAPI --> DB
+
+    %% Data layer connections
+    CodeGen --> DB
+    CodeGen --> S3
+    Executor --> DB
+    SemanticSearch --> DB
+    Auth --> Cache
+    JiraClient --> DB
+
+    %% External service connections
+    JiraClient --> Jira
+    Executor --> OpenAI
+    Executor --> LangSmith
+    Security --> OpenAI
+
+    %% Infrastructure connections
+    ALB --> ECS
+    ECS --> RDS
+    ECS --> S3
+    ECS --> CloudWatch
+    CodeDeploy --> ECS
+    ECR --> ECS
+
+    %% CI/CD connections
+    GitHub --> Actions
+    Actions --> Docker
+    Docker --> ECR
+    Actions --> CodeDeploy
+
+    %% Styling
+    classDef client fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef api fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef logic fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef data fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef infra fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef cicd fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+
+    class UI,Templates,Wizard,TestRun client
+    class tRPC,Auth,AgentAPI,ExecAPI,AnalyticsAPI,SearchAPI api
+    class CodeGen,Validation,Security,Executor,JiraClient,SemanticSearch logic
+    class DB,S3,Cache data
+    class Jira,LangSmith,OpenAI external
+    class ALB,ECS,RDS,ECR,CloudWatch,CodeDeploy infra
+    class GitHub,Actions,Docker cicd

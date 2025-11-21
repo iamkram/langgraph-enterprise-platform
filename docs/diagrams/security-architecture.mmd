@@ -1,0 +1,75 @@
+graph TB
+    User[User Input]
+    
+    subgraph "Layer 1a: PII Detection"
+        Presidio[Presidio Analyzer]
+        CustomRec[Custom Recognizers<br/>- Credit Cards<br/>- Account Numbers<br/>- SSN<br/>- Financial Data]
+        PIICheck{PII<br/>Detected?}
+    end
+
+    subgraph "Layer 1b: Guardrails"
+        NeMo[NeMo Guardrails]
+        Jailbreak{Jailbreak<br/>Attempt?}
+        ContentSafe{Content<br/>Safe?}
+    end
+
+    subgraph "Layer 2: LLM Execution"
+        LLM[OpenAI API<br/>Execution]
+        Tracing[LangSmith Tracing]
+    end
+
+    subgraph "Layer 3: Output Validation"
+        OutputPII[PII Leak Detection]
+        OutputCheck{Output<br/>Clean?}
+    end
+
+    Success[✓ Execution Success]
+    Reject[✗ Request Rejected]
+    Redact[Redact & Continue]
+
+    %% Flow
+    User --> Presidio
+    Presidio --> CustomRec
+    CustomRec --> PIICheck
+    
+    PIICheck -->|Yes| Redact
+    PIICheck -->|No| NeMo
+    Redact --> NeMo
+    
+    NeMo --> Jailbreak
+    Jailbreak -->|Yes| Reject
+    Jailbreak -->|No| ContentSafe
+    
+    ContentSafe -->|No| Reject
+    ContentSafe -->|Yes| LLM
+    
+    LLM --> Tracing
+    Tracing --> OutputPII
+    OutputPII --> OutputCheck
+    
+    OutputCheck -->|Clean| Success
+    OutputCheck -->|PII Found| Redact
+    
+    %% Security metrics
+    subgraph "Security Metrics"
+        Metrics[- PII Detection: 85-95%<br/>- Jailbreak Prevention: 90%+<br/>- Latency: <2s<br/>- False Positives: <5%]
+    end
+
+    %% Styling
+    classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef layer1 fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef layer2 fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef layer3 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef decision fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef success fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    classDef reject fill:#ffcdd2,stroke:#c62828,stroke-width:3px
+    classDef metrics fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+
+    class User input
+    class Presidio,CustomRec,NeMo layer1
+    class LLM,Tracing layer2
+    class OutputPII layer3
+    class PIICheck,Jailbreak,ContentSafe,OutputCheck decision
+    class Success success
+    class Reject,Redact reject
+    class Metrics metrics

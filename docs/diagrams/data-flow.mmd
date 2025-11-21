@@ -1,0 +1,78 @@
+sequenceDiagram
+    actor User
+    participant UI as React UI
+    participant API as tRPC API
+    participant CodeGen as Code Generator
+    participant Security as Security Layer
+    participant DB as Database
+    participant Jira as Jira API
+    participant Exec as Executor
+    participant LLM as OpenAI API
+
+    %% Agent Creation Flow
+    rect rgb(230, 245, 255)
+        Note over User,LLM: Agent Creation Flow
+        User->>UI: Fill 5-step wizard
+        UI->>UI: Validate with Zod
+        UI->>API: Submit agent config
+        API->>Security: Validate input (PII/Guardrails)
+        Security->>LLM: Check for jailbreaks
+        LLM-->>Security: Validation result
+        Security-->>API: Security passed
+        API->>CodeGen: Generate code templates
+        CodeGen->>CodeGen: Generate supervisor code
+        CodeGen->>CodeGen: Generate worker code
+        CodeGen->>CodeGen: Generate state code
+        CodeGen->>CodeGen: Generate workflow code
+        CodeGen->>DB: Save agent config
+        CodeGen->>DB: Save generated code
+        DB-->>API: Agent ID
+        API->>Jira: Create approval issue
+        Jira-->>API: Issue created
+        API-->>UI: Agent created
+        UI-->>User: Show success + code preview
+    end
+
+    %% Approval Workflow
+    rect rgb(255, 243, 224)
+        Note over User,Jira: Approval Workflow
+        Jira->>API: Webhook: Issue approved
+        API->>API: Verify HMAC signature
+        API->>DB: Update agent status
+        DB-->>API: Status updated
+        API->>User: Notification: Agent approved
+    end
+
+    %% Test Run Flow
+    rect rgb(243, 229, 245)
+        Note over User,LLM: Test Run Flow
+        User->>UI: Click "Test Run"
+        UI->>API: Execute agent request
+        API->>DB: Get agent config
+        DB-->>API: Agent config
+        API->>Exec: Execute with input
+        Exec->>Security: Validate input
+        Security-->>Exec: Input validated
+        Exec->>LLM: Supervisor routing
+        LLM-->>Exec: Route to worker
+        Exec->>LLM: Worker execution
+        LLM-->>Exec: Worker output
+        Exec->>LLM: Final synthesis
+        LLM-->>Exec: Final output
+        Exec->>DB: Log usage metrics
+        Exec-->>API: Execution result
+        API-->>UI: Show steps + output
+        UI-->>User: Display results
+    end
+
+    %% Analytics Flow
+    rect rgb(232, 245, 233)
+        Note over User,DB: Analytics Flow
+        User->>UI: View analytics
+        UI->>API: Get metrics
+        API->>DB: Query usage_logs
+        API->>DB: Query daily_metrics
+        DB-->>API: Aggregated data
+        API-->>UI: Metrics data
+        UI-->>User: Show charts
+    end
