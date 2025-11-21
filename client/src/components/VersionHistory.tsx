@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, History, RotateCcw, Clock, User } from "lucide-react";
+import { Loader2, History, RotateCcw, Clock, User, GitCompare } from "lucide-react";
+import { VersionComparison } from "./VersionComparison";
 import { toast } from "sonner";
 
 interface VersionHistoryProps {
@@ -18,6 +19,7 @@ interface VersionHistoryProps {
 
 export function VersionHistory({ agentConfigId, agentName, open, onOpenChange, onRollback }: VersionHistoryProps) {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
   
   const { data: versions, isLoading } = trpc.versions.history.useQuery(
     { agentConfigId },
@@ -45,9 +47,21 @@ export function VersionHistory({ agentConfigId, agentName, open, onOpenChange, o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Version History: {agentName}
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Version History: {agentName}
+            </div>
+            {versions && versions.length >= 2 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCompareDialogOpen(true)}
+              >
+                <GitCompare className="h-4 w-4 mr-2" />
+                Compare
+              </Button>
+            )}
           </DialogTitle>
           <DialogDescription>
             View and rollback to previous versions of this agent configuration
@@ -156,6 +170,13 @@ export function VersionHistory({ agentConfigId, agentName, open, onOpenChange, o
           </div>
         )}
       </DialogContent>
+      
+      <VersionComparison
+        agentConfigId={agentConfigId}
+        agentName={agentName}
+        open={compareDialogOpen}
+        onOpenChange={setCompareDialogOpen}
+      />
     </Dialog>
   );
 }

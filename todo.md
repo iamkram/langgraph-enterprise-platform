@@ -253,3 +253,34 @@
 - [x] Implement tag badges on agent cards
 - [x] Add tag management in filter dialog
 - [x] Test filtering with multiple tags (9 tests passing)
+
+
+---
+
+# Advanced Features (Phase 8)
+
+## Agent Version Comparison
+- [x] Create version comparison endpoint
+- [x] Implement diff algorithm for agent configs
+- [x] Build side-by-side comparison UI with color-coded diffs
+- [x] Highlight changed fields visually (red/green backgrounds)
+- [x] Show before/after values for each field
+- [x] Add comparison for tools and worker agents
+- [x] Test comparison with various changes (2 tests passing)
+
+## Smart Tag Suggestions
+- [x] Implement LLM-based tag analysis using invokeLLM
+- [x] Extract keywords from agent name/description
+- [x] Analyze tools and agent type for suggestions
+- [x] Create tag suggestion endpoint
+- [x] Build suggestion UI component with interactive badges
+- [x] Add "Apply All" for suggested tags
+- [x] Test suggestions with various agent types (1 test passing)
+
+## Scheduled Agent Execution
+- [x] Create schedules database table
+- [x] Build schedule management endpoints (CRUD)
+- [x] Implement execution history tracking
+- [x] Build scheduling UI component with cron input
+- [x] Add execution history viewer dialog
+- [x] Test scheduled execution flow (5 tests passing)

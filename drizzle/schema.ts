@@ -174,4 +174,42 @@ export const agentTags = mysqlTable("agent_tags", {
 });
 
 export type AgentTag = typeof agentTags.$inferSelect;
+
+/**
+ * Scheduled agent executions table
+ */
+export const schedules = mysqlTable("schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  agentConfigId: int("agent_config_id").notNull(),
+  userId: int("user_id").notNull(),
+  cronExpression: varchar("cron_expression", { length: 100 }).notNull(),
+  inputData: text("input_data"),
+  enabled: int("enabled").default(1).notNull(),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Schedule = typeof schedules.$inferSelect;
+export type InsertSchedule = typeof schedules.$inferInsert;
+
+/**
+ * Execution history for scheduled agents
+ */
+export const executionHistory = mysqlTable("execution_history", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("schedule_id").notNull(),
+  agentConfigId: int("agent_config_id").notNull(),
+  status: mysqlEnum("status", ["pending", "running", "completed", "failed"]).default("pending").notNull(),
+  inputData: text("input_data"),
+  outputData: text("output_data"),
+  errorMessage: text("error_message"),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  duration: int("duration"), // in milliseconds
+});
+
+export type ExecutionHistory = typeof executionHistory.$inferSelect;
+export type InsertExecutionHistory = typeof executionHistory.$inferInsert;
 export type InsertAgentTag = typeof agentTags.$inferInsert;

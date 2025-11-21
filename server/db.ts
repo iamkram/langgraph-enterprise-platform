@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, agentConfigs, generatedCode, InsertAgentConfig, webhookEvents, usageLogs, dailyMetrics, agentVersions, InsertAgentVersion, tags, InsertTag, agentTags, InsertAgentTag } from "../drizzle/schema";
+import { InsertUser, users, schedules, executionHistory, agentConfigs, generatedCode, InsertAgentConfig, webhookEvents, usageLogs, dailyMetrics, agentVersions, InsertAgentVersion, tags, InsertTag, agentTags, InsertAgentTag } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -541,4 +541,277 @@ export async function bulkAddTagsToAgents(agentIds: number[], tagIds: number[]) 
   }
   
   return { success: true, addedCount: values.length };
+}
+
+export async function compareVersions(agentConfigId: number, versionNumber1: number, versionNumber2: number) {
+  const version1 = await getAgentVersion(agentConfigId, versionNumber1);
+  const version2 = await getAgentVersion(agentConfigId, versionNumber2);
+  
+  if (!version1 || !version2) {
+    throw new Error("One or both versions not found");
+  }
+  
+  const fields = [
+    'name', 'description', 'agentType', 'modelName', 'systemPrompt',
+    'maxIterations', 'maxRetries', 'securityEnabled', 'checkpointingEnabled'
+  ] as const;
+  
+  const differences: Array<{
+    field: string;
+    oldValue: any;
+    newValue: any;
+    changed: boolean;
+  }> = [];
+  
+  for (const field of fields) {
+    const oldValue = version1[field];
+    const newValue = version2[field];
+    const changed = JSON.stringify(oldValue) !== JSON.stringify(newValue);
+    
+    differences.push({
+      field,
+      oldValue,
+      newValue,
+      changed,
+    });
+  }
+  
+  // Compare worker agents
+  const oldWorkers = JSON.parse(version1.workerAgents || '[]');
+  const newWorkers = JSON.parse(version2.workerAgents || '[]');
+  differences.push({
+    field: 'workerAgents',
+    oldValue: oldWorkers,
+    newValue: newWorkers,
+    changed: JSON.stringify(oldWorkers) !== JSON.stringify(newWorkers),
+  });
+  
+  // Compare tools
+  const oldTools = JSON.parse(version1.tools || '[]');
+  const newTools = JSON.parse(version2.tools || '[]');
+  differences.push({
+    field: 'tools',
+    oldValue: oldTools,
+    newValue: newTools,
+    changed: JSON.stringify(oldTools) !== JSON.stringify(newTools),
+  });
+  
+  return {
+    version1: {
+      versionNumber: version1.versionNumber,
+      createdAt: version1.createdAt,
+      changeDescription: version1.changeDescription,
+    },
+    version2: {
+      versionNumber: version2.versionNumber,
+      createdAt: version2.createdAt,
+      changeDescription: version2.changeDescription,
+    },
+    differences,
+    changedCount: differences.filter(d => d.changed).length,
+  };
+}
+
+export async function suggestTagsForAgent(agentName: string, agentDescription?: string, agentType?: string, tools?: string[]) {
+  const { invokeLLM } = await import('./_core/llm');
+  
+  // Get existing tags
+  const existingTags = await getAllTags();
+  
+  if (existingTags.length === 0) {
+    return { suggestions: [], reasoning: "No tags available in the system yet" };
+  }
+  
+  const tagList = existingTags.map(t => `- ${t.name}: ${t.description || 'No description'}`).join('\n');
+  
+  const prompt = `Analyze this agent configuration and suggest relevant tags from the available list.
+
+Agent Details:
+- Name: ${agentName}
+- Description: ${agentDescription || 'Not provided'}
+- Type: ${agentType || 'Not specified'}
+- Tools: ${tools && tools.length > 0 ? tools.join(', ') : 'None'}
+
+Available Tags:
+${tagList}
+
+Based on the agent's purpose, type, and tools, suggest 2-4 most relevant tags from the list above.
+Respond with ONLY a JSON object in this format:
+{
+  "suggestions": ["tag1", "tag2", "tag3"],
+  "reasoning": "Brief explanation of why these tags are relevant"
+}`;
+
+  try {
+    const response = await invokeLLM({
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that suggests relevant tags for agent configurations. Always respond with valid JSON only.' },
+        { role: 'user', content: prompt }
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'tag_suggestions',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              suggestions: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of suggested tag names'
+              },
+              reasoning: {
+                type: 'string',
+                description: 'Brief explanation of why these tags are relevant'
+              }
+            },
+            required: ['suggestions', 'reasoning'],
+            additionalProperties: false
+          }
+        }
+      }
+    });
+    
+    const content = response.choices[0]?.message?.content;
+    const contentStr = typeof content === 'string' ? content : '{"suggestions":[],"reasoning":""}';
+    const result = JSON.parse(contentStr);
+    
+    // Map tag names to tag IDs
+    const suggestedTags = existingTags.filter(t => 
+      result.suggestions.some((name: string) => t.name.toLowerCase() === name.toLowerCase())
+    );
+    
+    return {
+      suggestions: suggestedTags.map(t => ({ id: t.id, name: t.name, color: t.color })),
+      reasoning: result.reasoning
+    };
+  } catch (error) {
+    console.error('Error suggesting tags:', error);
+    return { suggestions: [], reasoning: 'Failed to generate suggestions' };
+  }
+}
+
+// Schedule management
+export async function createSchedule(data: {
+  agentConfigId: number;
+  userId: number;
+  cronExpression: string;
+  inputData?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(schedules).values({
+    agentConfigId: data.agentConfigId,
+    userId: data.userId,
+    cronExpression: data.cronExpression,
+    inputData: data.inputData,
+  });
+  
+  return { id: Number(result.insertId), success: true };
+}
+
+export async function getSchedulesByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const results = await db
+    .select()
+    .from(schedules)
+    .where(eq(schedules.userId, userId))
+    .orderBy(desc(schedules.createdAt));
+  
+  return results;
+}
+
+export async function getScheduleById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const results = await db
+    .select()
+    .from(schedules)
+    .where(eq(schedules.id, id))
+    .limit(1);
+  
+  return results[0];
+}
+
+export async function updateSchedule(id: number, data: {
+  cronExpression?: string;
+  inputData?: string;
+  enabled?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(schedules)
+    .set(data)
+    .where(eq(schedules.id, id));
+  
+  return { success: true };
+}
+
+export async function deleteSchedule(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .delete(schedules)
+    .where(and(eq(schedules.id, id), eq(schedules.userId, userId)));
+  
+  return { success: true };
+}
+
+// Execution history
+export async function createExecutionHistory(data: {
+  scheduleId: number;
+  agentConfigId: number;
+  inputData?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [result] = await db.insert(executionHistory).values({
+    scheduleId: data.scheduleId,
+    agentConfigId: data.agentConfigId,
+    status: "pending",
+    inputData: data.inputData,
+  });
+  
+  return { id: Number(result.insertId) };
+}
+
+export async function updateExecutionHistory(id: number, data: {
+  status?: "pending" | "running" | "completed" | "failed";
+  outputData?: string;
+  errorMessage?: string;
+  completedAt?: Date;
+  duration?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(executionHistory)
+    .set(data)
+    .where(eq(executionHistory.id, id));
+  
+  return { success: true };
+}
+
+export async function getExecutionHistory(scheduleId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const results = await db
+    .select()
+    .from(executionHistory)
+    .where(eq(executionHistory.scheduleId, scheduleId))
+    .orderBy(desc(executionHistory.startedAt))
+    .limit(limit);
+  
+  return results;
 }

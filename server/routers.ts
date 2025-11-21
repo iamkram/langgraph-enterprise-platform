@@ -359,6 +359,17 @@ export const appRouter = router({
         const { rollbackToVersion } = await import('./db');
         return await rollbackToVersion(input.agentConfigId, input.versionNumber, ctx.user.id);
       }),
+    
+    compare: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        versionNumber1: z.number(),
+        versionNumber2: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const { compareVersions } = await import('./db');
+        return await compareVersions(input.agentConfigId, input.versionNumber1, input.versionNumber2);
+      }),
   }),
 
   // Tags management
@@ -435,6 +446,23 @@ export const appRouter = router({
         const { getAgentsByTag } = await import('./db');
         return await getAgentsByTag(input.tagId);
       }),
+    
+    suggest: protectedProcedure
+      .input(z.object({
+        agentName: z.string(),
+        agentDescription: z.string().optional(),
+        agentType: z.string().optional(),
+        tools: z.array(z.string()).optional(),
+      }))
+      .query(async ({ input }) => {
+        const { suggestTagsForAgent } = await import('./db');
+        return await suggestTagsForAgent(
+          input.agentName,
+          input.agentDescription,
+          input.agentType,
+          input.tools
+        );
+      }),
   }),
 
   // Bulk operations
@@ -486,6 +514,60 @@ export const appRouter = router({
           exportedAt: new Date().toISOString(),
           agents,
         };
+      }),
+  }),
+
+  // Schedules management
+  schedules: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getSchedulesByUser } = await import('./db');
+      return await getSchedulesByUser(ctx.user.id);
+    }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        agentConfigId: z.number(),
+        cronExpression: z.string(),
+        inputData: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createSchedule } = await import('./db');
+        return await createSchedule({
+          agentConfigId: input.agentConfigId,
+          userId: ctx.user.id,
+          cronExpression: input.cronExpression,
+          inputData: input.inputData,
+        });
+      }),
+    
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        cronExpression: z.string().optional(),
+        inputData: z.string().optional(),
+        enabled: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { updateSchedule } = await import('./db');
+        return await updateSchedule(input.id, {
+          cronExpression: input.cronExpression,
+          inputData: input.inputData,
+          enabled: input.enabled,
+        });
+      }),
+    
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteSchedule } = await import('./db');
+        return await deleteSchedule(input.id, ctx.user.id);
+      }),
+    
+    history: protectedProcedure
+      .input(z.object({ scheduleId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        const { getExecutionHistory } = await import('./db');
+        return await getExecutionHistory(input.scheduleId, input.limit);
       }),
   }),
 
