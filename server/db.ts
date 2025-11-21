@@ -99,8 +99,14 @@ export async function createAgentConfig(userId: number, config: Omit<InsertAgent
     userId,
   });
   
-  // Return the insertId for MySQL
-  return { insertId: (result as any).insertId || 0 };
+  // MySQL2 returns insertId in result object
+  const insertId = Number((result as any)[0]?.insertId || (result as any).insertId || 0);
+  
+  if (!insertId) {
+    throw new Error("Failed to get insert ID from database");
+  }
+  
+  return { insertId };
 }
 
 export async function getAgentConfigsByUserId(userId: number) {

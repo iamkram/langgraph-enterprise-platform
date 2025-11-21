@@ -77,8 +77,8 @@ export default function Templates() {
 
         {/* Templates Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTemplates.map(template => (
-            <Card key={template.id} className="flex flex-col hover:shadow-lg transition-shadow">
+          {filteredTemplates.map((template, idx) => (
+            <Card key={template.id} className="flex flex-col hover:shadow-lg transition-shadow" data-tutorial={idx === 0 ? "template-card" : undefined}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="text-4xl mb-2">{template.icon}</div>
@@ -131,6 +131,7 @@ export default function Templates() {
                 <Button 
                   className="flex-1"
                   onClick={() => handleCloneTemplate(template)}
+                  data-tutorial={idx === 0 ? "clone-button" : undefined}
                 >
                   Clone Template
                   <ArrowRight className="h-4 w-4 ml-2" />

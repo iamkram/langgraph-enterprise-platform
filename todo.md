@@ -197,3 +197,24 @@
 - [x] Update page titles and meta tags
 - [ ] Update environment variable default (user must do via Settings UI)
 - [ ] Verify branding on all pages
+
+
+---
+
+# New Enhancement Features
+
+## Welcome Tutorial Onboarding
+- [x] Create onboarding state management (localStorage)
+- [x] Build interactive tutorial overlay component
+- [x] Add step-by-step guide for first agent creation
+- [x] Implement tutorial progress tracking
+- [x] Add skip/restart tutorial options
+- [x] Test tutorial flow end-to-end
+
+## Agent Export/Import
+- [x] Add export button to agent cards
+- [x] Implement agent-to-JSON serialization
+- [x] Create import UI with file upload
+- [x] Add JSON validation for imports
+- [x] Implement agent creation from imported JSON
+- [x] Test export/import with all agent types (7 tests passing)

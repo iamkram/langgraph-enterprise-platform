@@ -152,6 +152,93 @@ export const appRouter = router({
           workflow: codes.find(c => c.codeType === "workflow")?.code,
         };
       }),
+    
+    export: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const { getAgentConfigById } = await import("./db");
+        
+        // Verify ownership
+        const config = await getAgentConfigById(input.id);
+        if (!config || config.userId !== ctx.user.id) {
+          throw new Error("Unauthorized");
+        }
+        
+        // Return agent configuration as JSON-serializable object
+        return {
+          version: "1.0",
+          exportedAt: new Date().toISOString(),
+          agent: {
+            name: config.name,
+            description: config.description,
+            agentType: config.agentType,
+            modelName: config.modelName,
+            systemPrompt: config.systemPrompt,
+            maxIterations: config.maxIterations,
+            maxRetries: config.maxRetries,
+            workerAgents: JSON.parse(config.workerAgents || '[]'),
+            tools: JSON.parse(config.tools || '[]'),
+            securityEnabled: config.securityEnabled === 1,
+            checkpointingEnabled: config.checkpointingEnabled === 1,
+          },
+        };
+      }),
+    
+    import: protectedProcedure
+      .input(z.object({
+        data: z.object({
+          version: z.string(),
+          agent: agentConfigSchema,
+        }),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createAgentConfig, saveGeneratedCode } = await import("./db");
+        const {
+          generateCompleteCode,
+          generateSupervisorCode,
+          generateWorkerCode,
+          generateStateCode,
+          generateWorkflowCode,
+        } = await import("./codeGeneration");
+        
+        const agentData = input.data.agent;
+        
+        // Create agent config from imported data
+        const result = await createAgentConfig(ctx.user.id, {
+          name: agentData.name,
+          description: agentData.description,
+          agentType: agentData.agentType,
+          workerAgents: JSON.stringify(agentData.workerAgents || []),
+          tools: JSON.stringify(agentData.tools || []),
+          securityEnabled: agentData.securityEnabled ? 1 : 0,
+          checkpointingEnabled: agentData.checkpointingEnabled ? 1 : 0,
+          modelName: agentData.modelName,
+          systemPrompt: agentData.systemPrompt,
+          maxIterations: agentData.maxIterations,
+          maxRetries: agentData.maxRetries,
+        });
+        
+        const agentId = Number(result.insertId);
+        
+        // Generate code
+        const completeCode = generateCompleteCode(agentData);
+        const supervisorCode = generateSupervisorCode(agentData);
+        const stateCode = generateStateCode(agentData);
+        const workflowCode = generateWorkflowCode(agentData);
+        
+        // Save generated code
+        await saveGeneratedCode(agentId, "complete", completeCode);
+        await saveGeneratedCode(agentId, "supervisor", supervisorCode);
+        await saveGeneratedCode(agentId, "state", stateCode);
+        await saveGeneratedCode(agentId, "workflow", workflowCode);
+        
+        if (agentData.workerAgents && agentData.workerAgents.length > 0) {
+          const workerCode = generateWorkerCode(agentData.workerAgents[0], agentData.tools || []);
+          await saveGeneratedCode(agentId, "worker", workerCode);
+        }
+        
+        return { id: agentId, success: true };
+      }),
   }),
 
   // Approval workflow

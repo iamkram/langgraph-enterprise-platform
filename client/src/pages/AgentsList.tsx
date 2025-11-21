@@ -3,16 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Plus, Loader2, Bot, Trash2, Sparkles, Layers } from "lucide-react";
+import { Plus, Loader2, Bot, Trash2, Sparkles, Layers, GraduationCap, Download, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+import { useTutorial } from "@/hooks/useTutorial";
+import { TutorialOverlay } from "@/components/TutorialOverlay";
+import { useEffect } from "react";
 
 export default function AgentsList() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const { isCompleted, startTutorial } = useTutorial();
   const { data: agents, isLoading, refetch } = trpc.agents.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+
+  // Auto-start tutorial for first-time users with no agents
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && agents && agents.length === 0 && !isCompleted) {
+      // Delay to allow page to render
+      const timer = setTimeout(() => startTutorial(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, isLoading, agents, isCompleted, startTutorial]);
   const deleteMutation = trpc.agents.delete.useMutation({
     onSuccess: () => {
       toast.success("Agent deleted successfully");
@@ -51,10 +64,64 @@ export default function AgentsList() {
     );
   }
   
+  const utils = trpc.useUtils();
+  const importMutation = trpc.agents.import.useMutation({
+    onSuccess: () => {
+      toast.success("Agent imported successfully");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to import agent: ${error.message}`);
+    },
+  });
+
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to delete this agent?")) {
       deleteMutation.mutate({ id });
     }
+  };
+
+  const handleExport = async (id: number, name: string) => {
+    try {
+      const result = await utils.agents.export.fetch({ id });
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name.replace(/\s+/g, '-').toLowerCase()}-agent.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Agent exported successfully");
+    } catch (error) {
+      toast.error("Failed to export agent");
+    }
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        // Validate basic structure
+        if (!data.version || !data.agent) {
+          throw new Error('Invalid agent file format');
+        }
+        
+        importMutation.mutate({ data });
+      } catch (error) {
+        toast.error(`Failed to import agent: ${error instanceof Error ? error.message : 'Invalid JSON'}`);
+      }
+    };
+    input.click();
   };
   
   return (
@@ -69,8 +136,26 @@ export default function AgentsList() {
             </p>
           </div>
           <div className="flex gap-3">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={startTutorial}
+              title="Restart tutorial"
+            >
+              <GraduationCap className="mr-2 h-5 w-5" />
+              Tutorial
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={handleImport}
+              title="Import agent from JSON"
+            >
+              <Upload className="mr-2 h-5 w-5" />
+              Import
+            </Button>
             <Link href="/templates">
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" data-tutorial="templates-button">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Templates
               </Button>
@@ -87,7 +172,7 @@ export default function AgentsList() {
               </Button>
             </Link>
             <Link href="/create">
-              <Button size="lg">
+              <Button size="lg" data-tutorial="create-button">
                 <Plus className="mr-2 h-5 w-5" />
                 Create New Agent
               </Button>
@@ -151,6 +236,14 @@ export default function AgentsList() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handleExport(agent.id, agent.name)}
+                        title="Export agent"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleDelete(agent.id)}
                         disabled={deleteMutation.isPending}
                       >
@@ -180,6 +273,7 @@ export default function AgentsList() {
           </Card>
         )}
       </div>
+      <TutorialOverlay />
     </div>
   );
 }
