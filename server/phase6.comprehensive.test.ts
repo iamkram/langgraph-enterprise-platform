@@ -160,7 +160,9 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
       // Update
       const result = await caller.agents.update({
         id: created.agentId!,
-        description: "Updated description",
+        data: {
+          description: "Updated description",
+        },
       });
 
       expect(result.success).toBe(true);
@@ -228,7 +230,7 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
 
       // Submit for approval
       const result = await caller.approval.submit({
-        agentId: created.agentId!,
+        agentConfigId: created.agentId!,
         notes: "Ready for production",
       });
 
@@ -249,9 +251,35 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
       const ctx = createAuthContext("admin");
       const caller = appRouter.createCaller(ctx);
 
-      // This would normally come from Jira webhook
+      // Create an agent and submit for approval first
+      const created = await caller.agents.create({
+        name: "Webhook Test Agent",
+        description: "Test",
+        agentType: "supervisor",
+        model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
+        workerAgents: [],
+        tools: [],
+        securitySettings: {
+          enablePiiDetection: false,
+          enableGuardrails: false,
+          enableCheckpointing: false,
+        },
+      });
+
+      // Submit for approval to get Jira issue key
+      const submitted = await caller.approval.submit({
+        agentConfigId: created.agentId!,
+        notes: "Test submission",
+      });
+
+      // Handle webhook with the created issue key
       const result = await caller.approval.handleWebhook({
-        issueKey: "AGENT-123",
+        issueKey: submitted.jiraIssueKey!,
         status: "approved",
         approver: "admin@example.com",
         comments: "Looks good",
@@ -399,8 +427,28 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
+      // Create an agent first
+      const created = await caller.agents.create({
+        name: "Analytics Test Agent",
+        description: "Test",
+        agentType: "supervisor",
+        model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
+        workers: [],
+        tools: [],
+        securitySettings: {
+          enablePiiDetection: false,
+          enableGuardrails: false,
+          enableCheckpointing: false,
+        },
+      });
+
       const result = await caller.analytics.trackExecution({
-        agentId: 1,
+        agentId: created.agentId!,
         executionTime: 2500,
         tokensUsed: 1500,
         success: true,
@@ -494,8 +542,28 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
+      // Create an agent first
+      const created = await caller.agents.create({
+        name: "Test Agent",
+        description: "Test",
+        agentType: "supervisor",
+        model: "gpt-4o",
+        modelName: "gpt-4o",
+        maxIterations: 10,
+        maxRetries: 3,
+        securityEnabled: false,
+        checkpointingEnabled: false,
+        workers: [],
+        tools: [],
+        securitySettings: {
+          enablePiiDetection: false,
+          enableGuardrails: false,
+          enableCheckpointing: false,
+        },
+      });
+
       const result = await caller.agents.generateCode({
-        agentId: 1,
+        agentId: created.agentId!,
       });
 
       expect(result.code).toBeDefined();
@@ -519,10 +587,7 @@ describe("Phase 6: Comprehensive Testing Suite", () => {
         maxRetries: 3,
         securityEnabled: false,
         checkpointingEnabled: false,
-        workers: [
-          { name: "worker1", description: "First worker", tools: [] },
-          { name: "worker2", description: "Second worker", tools: [] },
-        ],
+        workerAgents: ["worker1", "worker2"],
         tools: [],
         securitySettings: {
           enablePiiDetection: false,

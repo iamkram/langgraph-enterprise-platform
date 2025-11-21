@@ -320,6 +320,7 @@ export async function getCostByAgent(agentId: number, startDate: Date, endDate: 
   
   return {
     totalCost: parseFloat(totalCost.toFixed(4)),
+    totalTokens,
     breakdown: results.map(log => ({
       date: log.createdAt,
       tokens: log.tokensUsed || 0,
