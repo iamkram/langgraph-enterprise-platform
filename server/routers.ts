@@ -591,6 +591,13 @@ export const appRouter = router({
         const { getExecutionHistory } = await import('./db');
         return await getExecutionHistory(input.scheduleId, input.limit);
       }),
+    
+    recentExecutions: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        const { getRecentExecutions } = await import('./db');
+        return await getRecentExecutions(ctx.user.id, input.limit || 50);
+      }),
   }),
 
   // Semantic search

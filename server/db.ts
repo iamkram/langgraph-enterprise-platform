@@ -821,3 +821,30 @@ export async function getExecutionHistory(scheduleId: number, limit: number = 50
   
   return results;
 }
+
+
+export async function getRecentExecutions(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Join execution_history with schedules to filter by user
+  const result = await db
+    .select({
+      id: executionHistory.id,
+      scheduleId: executionHistory.scheduleId,
+      agentConfigId: executionHistory.agentConfigId,
+      status: executionHistory.status,
+      startedAt: executionHistory.startedAt,
+      completedAt: executionHistory.completedAt,
+      duration: executionHistory.duration,
+      errorMessage: executionHistory.errorMessage,
+      outputData: executionHistory.outputData,
+    })
+    .from(executionHistory)
+    .innerJoin(schedules, eq(executionHistory.scheduleId, schedules.id))
+    .where(eq(schedules.userId, userId))
+    .orderBy(desc(executionHistory.startedAt))
+    .limit(limit);
+  
+  return result;
+}

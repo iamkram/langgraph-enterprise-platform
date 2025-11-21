@@ -354,3 +354,29 @@
 - [x] Implement one-click template application
 - [ ] Add custom template creation (future enhancement)
 - [ ] Store user templates in database (future enhancement)
+
+
+---
+
+# Critical Fixes (Current Sprint)
+
+## Database Schema Migration
+- [x] Verify actual schedules table column names in database
+- [x] Fix column name mismatch (is_active vs enabled)
+- [x] Update all queries to use correct column names
+- [x] Test scheduler loading after fix (scheduler running successfully)
+
+## Execution History System
+- [x] Create scheduleExecutions endpoint in routers
+- [x] Implement recentExecutions query
+- [x] Add getRecentExecutions function to db.ts
+- [ ] Add execution tracking in scheduler (requires agent execution integration)
+- [ ] Store execution results in database (requires agent execution integration)
+- [ ] Test dashboard with real execution data (deferred)
+
+## Test Fixes & CI/CD
+- [ ] Create database cleanup utilities for tests
+- [ ] Fix 17 failing tests with proper isolation
+- [ ] Create GitHub Actions workflow file
+- [ ] Add test, build, and lint steps to CI
+- [ ] Test CI/CD pipeline with push
