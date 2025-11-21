@@ -19,8 +19,10 @@ interface ScheduleManagerProps {
 }
 
 export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }: ScheduleManagerProps) {
+  const [name, setName] = useState("");
   const [cronExpression, setCronExpression] = useState("0 0 * * *"); // Daily at midnight
-  const [inputData, setInputData] = useState("");
+  const [input, setInput] = useState("");
+  const [notifyOnCompletion, setNotifyOnCompletion] = useState(false);
   const [showHistory, setShowHistory] = useState<number | null>(null);
   
   const { data: schedules, isLoading, refetch } = trpc.schedules.list.useQuery(undefined, {
@@ -31,7 +33,9 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
     onSuccess: () => {
       toast.success("Schedule created successfully");
       setCronExpression("0 0 * * *");
-      setInputData("");
+      setInput("");
+      setName("");
+      setNotifyOnCompletion(false);
       refetch();
     },
     onError: (error) => {
@@ -61,15 +65,17 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
     
     createMutation.mutate({
       agentConfigId,
+      name: name || `Schedule for ${agentName}`,
       cronExpression,
-      inputData: inputData || undefined,
+      input: input || undefined,
+      notifyOnCompletion,
     });
   };
   
-  const handleToggle = (scheduleId: number, currentEnabled: number) => {
+  const handleToggle = (scheduleId: number, currentIsActive: number) => {
     updateMutation.mutate({
       id: scheduleId,
-      enabled: currentEnabled ? 0 : 1,
+      isActive: currentIsActive ? 0 : 1,
     });
   };
   
@@ -123,14 +129,33 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="name">Schedule Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={`Schedule for ${agentName}`}
+                  />
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="input">Input Data (Optional JSON)</Label>
                   <Textarea
                     id="input"
-                    value={inputData}
-                    onChange={(e) => setInputData(e.target.value)}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                     placeholder='{"key": "value"}'
                     rows={3}
                   />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="notify"
+                    checked={notifyOnCompletion}
+                    onCheckedChange={setNotifyOnCompletion}
+                  />
+                  <Label htmlFor="notify">Notify on completion</Label>
                 </div>
                 
                 <Button
@@ -174,23 +199,20 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
                             <code className="text-sm bg-muted px-2 py-1 rounded">
                               {schedule.cronExpression}
                             </code>
-                            <Badge variant={schedule.enabled ? "default" : "secondary"}>
-                              {schedule.enabled ? "Enabled" : "Disabled"}
+                            <Badge variant={schedule.isActive ? "default" : "secondary"}>
+                              {schedule.isActive ? "Enabled" : "Disabled"}
                             </Badge>
                           </div>
                           
-                          {schedule.inputData && (
+                          {schedule.input && (
                             <div className="text-xs text-muted-foreground">
-                              Input: <code className="bg-muted px-1 rounded">{schedule.inputData}</code>
+                              Input: <code className="bg-muted px-1 rounded">{schedule.input}</code>
                             </div>
                           )}
                           
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {schedule.lastRunAt && (
-                              <span>Last run: {new Date(schedule.lastRunAt).toLocaleString()}</span>
-                            )}
-                            {schedule.nextRunAt && (
-                              <span>Next run: {new Date(schedule.nextRunAt).toLocaleString()}</span>
+                            {schedule.lastExecutedAt && (
+                              <span>Last run: {new Date(schedule.lastExecutedAt).toLocaleString()}</span>
                             )}
                           </div>
                         </div>
@@ -199,10 +221,10 @@ export function ScheduleManager({ agentConfigId, agentName, open, onOpenChange }
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleToggle(schedule.id, schedule.enabled)}
+                            onClick={() => handleToggle(schedule.id, schedule.isActive)}
                             disabled={updateMutation.isPending}
                           >
-                            {schedule.enabled ? (
+                            {schedule.isActive ? (
                               <Pause className="h-4 w-4" />
                             ) : (
                               <Play className="h-4 w-4" />

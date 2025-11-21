@@ -191,7 +191,13 @@ export const appRouter = router({
       .input(z.object({
         data: z.object({
           version: z.string(),
-          agent: agentConfigSchema,
+          agent: agentConfigSchema.partial({
+            securityEnabled: true,
+            checkpointingEnabled: true,
+            modelName: true,
+            maxIterations: true,
+            maxRetries: true,
+          }),
         }),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -206,28 +212,36 @@ export const appRouter = router({
         
         const agentData = input.data.agent;
         
-        // Create agent config from imported data
+        // Create agent config from imported data with defaults
         const result = await createAgentConfig(ctx.user.id, {
           name: agentData.name,
           description: agentData.description,
           agentType: agentData.agentType,
           workerAgents: JSON.stringify(agentData.workerAgents || []),
           tools: JSON.stringify(agentData.tools || []),
-          securityEnabled: agentData.securityEnabled ? 1 : 0,
-          checkpointingEnabled: agentData.checkpointingEnabled ? 1 : 0,
-          modelName: agentData.modelName,
+          securityEnabled: agentData.securityEnabled !== undefined ? (agentData.securityEnabled ? 1 : 0) : 0,
+          checkpointingEnabled: agentData.checkpointingEnabled !== undefined ? (agentData.checkpointingEnabled ? 1 : 0) : 0,
+          modelName: agentData.modelName || 'gpt-4o',
           systemPrompt: agentData.systemPrompt,
-          maxIterations: agentData.maxIterations,
-          maxRetries: agentData.maxRetries,
+          maxIterations: agentData.maxIterations || 10,
+          maxRetries: agentData.maxRetries || 3,
         });
         
         const agentId = Number(result.insertId);
         
-        // Generate code
-        const completeCode = generateCompleteCode(agentData);
-        const supervisorCode = generateSupervisorCode(agentData);
-        const stateCode = generateStateCode(agentData);
-        const workflowCode = generateWorkflowCode(agentData);
+        // Generate code with defaults filled in
+        const completeAgentData = {
+          ...agentData,
+          securityEnabled: agentData.securityEnabled ?? false,
+          checkpointingEnabled: agentData.checkpointingEnabled ?? false,
+          modelName: agentData.modelName || 'gpt-4o',
+          maxIterations: agentData.maxIterations || 10,
+          maxRetries: agentData.maxRetries || 3,
+        };
+        const completeCode = generateCompleteCode(completeAgentData);
+        const supervisorCode = generateSupervisorCode(completeAgentData);
+        const stateCode = generateStateCode(completeAgentData);
+        const workflowCode = generateWorkflowCode(completeAgentData);
         
         // Save generated code
         await saveGeneratedCode(agentId, "complete", completeCode);
@@ -527,32 +541,40 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({
         agentConfigId: z.number(),
+        name: z.string(),
         cronExpression: z.string(),
-        inputData: z.string().optional(),
+        input: z.string().optional(),
+        notifyOnCompletion: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const { createSchedule } = await import('./db');
         return await createSchedule({
           agentConfigId: input.agentConfigId,
           userId: ctx.user.id,
+          name: input.name,
           cronExpression: input.cronExpression,
-          inputData: input.inputData,
+          input: input.input,
+          notifyOnCompletion: input.notifyOnCompletion ? 1 : 0,
         });
       }),
     
     update: protectedProcedure
       .input(z.object({
         id: z.number(),
+        name: z.string().optional(),
         cronExpression: z.string().optional(),
-        inputData: z.string().optional(),
-        enabled: z.number().optional(),
+        input: z.string().optional(),
+        isActive: z.number().optional(),
+        notifyOnCompletion: z.boolean().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const { updateSchedule } = await import('./db');
         return await updateSchedule(input.id, {
+          name: input.name,
           cronExpression: input.cronExpression,
-          inputData: input.inputData,
-          enabled: input.enabled,
+          input: input.input,
+          isActive: input.isActive,
+          notifyOnCompletion: input.notifyOnCompletion !== undefined ? (input.notifyOnCompletion ? 1 : 0) : undefined,
         });
       }),
     

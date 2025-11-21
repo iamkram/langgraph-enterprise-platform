@@ -182,17 +182,34 @@ export const schedules = mysqlTable("schedules", {
   id: int("id").autoincrement().primaryKey(),
   agentConfigId: int("agent_config_id").notNull(),
   userId: int("user_id").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   cronExpression: varchar("cron_expression", { length: 100 }).notNull(),
-  inputData: text("input_data"),
-  enabled: int("enabled").default(1).notNull(),
-  lastRunAt: timestamp("last_run_at"),
-  nextRunAt: timestamp("next_run_at"),
+  input: text("input"), // JSON input for agent execution
+  isActive: int("is_active").default(1).notNull(), // 1 = active, 0 = inactive
+  notifyOnCompletion: int("notify_on_completion").default(0).notNull(), // 1 = yes, 0 = no
+  lastExecutedAt: timestamp("last_executed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Schedule = typeof schedules.$inferSelect;
 export type InsertSchedule = typeof schedules.$inferInsert;
+
+/**
+ * Schedule execution results table
+ */
+export const scheduleExecutions = mysqlTable("schedule_executions", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("schedule_id").notNull(),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
+  status: mysqlEnum("status", ["success", "failure"]).notNull(),
+  result: text("result"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type ScheduleExecution = typeof scheduleExecutions.$inferSelect;
+export type InsertScheduleExecution = typeof scheduleExecutions.$inferInsert;
 
 /**
  * Execution history for scheduled agents

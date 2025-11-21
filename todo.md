@@ -284,3 +284,46 @@
 - [x] Build scheduling UI component with cron input
 - [x] Add execution history viewer dialog
 - [x] Test scheduled execution flow (5 tests passing)
+
+
+---
+
+# Immediate Action Items (Week 1)
+
+## Schedule Execution Engine
+- [x] Install node-cron dependency
+- [x] Create SchedulerService class
+- [x] Integrate scheduler into server startup
+- [x] Add executeAgent function
+- [x] Update schedule schema with input/notification fields
+- [x] Push database schema changes
+- [x] Update ScheduleManager UI component
+- [ ] Add scheduler tests
+- [ ] Test end-to-end execution flow
+
+## Version Comparison Integration
+- [ ] Add version selection state to VersionHistory
+- [ ] Add checkboxes to version list
+- [ ] Add "Compare Selected Versions" button
+- [ ] Integrate VersionComparison dialog
+- [ ] Test version comparison flow
+
+## Smart Tag Suggestions Integration
+- [ ] Import SmartTagSuggestions in CreateAgent
+- [ ] Add suggestions section to Step 4
+- [ ] Wire up tag application logic
+- [ ] Test tag suggestions in wizard
+
+## Tutorial Auto-Start Fix
+- [ ] Add localStorage check on mount
+- [ ] Auto-start tutorial for first-time users
+- [ ] Add "Don't show again" option
+- [ ] Test tutorial auto-start flow
+
+## Fix Failing Tests
+- [ ] Create test utilities file with cleanup functions
+- [ ] Add beforeEach/afterEach to all test files
+- [ ] Fix tag update test with unique names
+- [ ] Fix version comparison test async issues
+- [ ] Fix tag suggestions test with mocks
+- [ ] Run all tests and verify 100% passing

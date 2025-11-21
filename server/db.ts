@@ -696,8 +696,10 @@ Respond with ONLY a JSON object in this format:
 export async function createSchedule(data: {
   agentConfigId: number;
   userId: number;
+  name: string;
   cronExpression: string;
-  inputData?: string;
+  input?: string;
+  notifyOnCompletion?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -705,8 +707,10 @@ export async function createSchedule(data: {
   const [result] = await db.insert(schedules).values({
     agentConfigId: data.agentConfigId,
     userId: data.userId,
+    name: data.name,
     cronExpression: data.cronExpression,
-    inputData: data.inputData,
+    input: data.input,
+    notifyOnCompletion: data.notifyOnCompletion || 0,
   });
   
   return { id: Number(result.insertId), success: true };
@@ -739,9 +743,11 @@ export async function getScheduleById(id: number) {
 }
 
 export async function updateSchedule(id: number, data: {
+  name?: string;
   cronExpression?: string;
-  inputData?: string;
-  enabled?: number;
+  input?: string;
+  isActive?: number;
+  notifyOnCompletion?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

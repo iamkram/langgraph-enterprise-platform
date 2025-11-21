@@ -57,9 +57,42 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, async () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Start scheduler service (only in non-test environments)
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        const { schedulerService } = await import('../scheduler');
+        await schedulerService.start();
+      } catch (error) {
+        console.error('[Server] Failed to start scheduler:', error);
+      }
+    }
   });
+  
+  // Graceful shutdown
+  const shutdown = async () => {
+    console.log('Shutting down gracefully...');
+    
+    // Stop scheduler
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        const { schedulerService } = await import('../scheduler');
+        schedulerService.stop();
+      } catch (error) {
+        console.error('[Server] Error stopping scheduler:', error);
+      }
+    }
+    
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  };
+  
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 }
 
 startServer().catch(console.error);
