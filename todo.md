@@ -531,3 +531,15 @@
 - [ ] Test detail page data loading (will test in browser)
 - [ ] Test usage/clone functionality (will test in browser)
 - [x] Save checkpoint with all features
+
+
+---
+
+# Library Navigation Enhancement
+
+## Make Library Items Clickable
+- [x] Update Library.tsx to make tool names clickable links to /library/tool/:id
+- [x] Update Library.tsx to make agent names clickable links to /library/agent/:id
+- [x] Test navigation from library list to detail pages (both tools and agents work perfectly)
+- [x] Fix JSON.parse errors in detail pages (parameters and tags are already objects)
+- [ ] Save checkpoint

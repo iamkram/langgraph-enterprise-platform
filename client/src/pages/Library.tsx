@@ -221,7 +221,14 @@ export default function Library() {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg">{tool.name}</CardTitle>
+                          <CardTitle className="text-lg">
+                            <button
+                              onClick={() => setLocation(`/library/tool/${tool.id}`)}
+                              className="hover:text-primary transition-colors text-left"
+                            >
+                              {tool.name}
+                            </button>
+                          </CardTitle>
                           <CardDescription className="mt-1 line-clamp-2">
                             {tool.description}
                           </CardDescription>
@@ -311,7 +318,14 @@ export default function Library() {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg">{agent.name}</CardTitle>
+                          <CardTitle className="text-lg">
+                            <button
+                              onClick={() => setLocation(`/library/agent/${agent.id}`)}
+                              className="hover:text-primary transition-colors text-left"
+                            >
+                              {agent.name}
+                            </button>
+                          </CardTitle>
                           <CardDescription className="mt-1 font-medium">
                             {agent.role}
                           </CardDescription>

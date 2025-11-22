@@ -89,8 +89,9 @@ export default function ToolDetail() {
     );
   }
 
-  const parameters = JSON.parse(tool.parameters);
-  const tags = tool.tags ? JSON.parse(tool.tags) : [];
+  // Parameters and tags are already parsed objects from the backend
+  const parameters = tool.parameters;
+  const tags = tool.tags || [];
 
   return (
     <div className="container mx-auto py-8 space-y-6">

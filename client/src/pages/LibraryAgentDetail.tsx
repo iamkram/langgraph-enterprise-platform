@@ -92,7 +92,8 @@ export default function LibraryAgentDetail() {
     );
   }
 
-  const tags = agent.tags ? JSON.parse(agent.tags) : [];
+  // Tags is already a parsed array from the backend
+  const tags = agent.tags || [];
 
   return (
     <div className="container mx-auto py-8 space-y-6">
