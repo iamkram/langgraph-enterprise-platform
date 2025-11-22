@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { executionRouter } from "./execution";
+import { templateRouter } from "./templateRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { agentConfigSchema } from "@shared/agentValidation";
@@ -21,6 +22,7 @@ export const appRouter = router({
   }),
 
   execution: executionRouter,
+  templates: templateRouter,
   
   agents: router({
     list: protectedProcedure.query(async ({ ctx }) => {
@@ -43,7 +45,9 @@ export const appRouter = router({
       }),
     
     create: protectedProcedure
-      .input(agentConfigSchema)
+      .input(agentConfigSchema.extend({
+        templateUsageId: z.number().optional(),
+      }))
       .mutation(async ({ input, ctx }) => {
         const { createAgentConfig, saveGeneratedCode } = await import("./db");
         const {
@@ -86,6 +90,17 @@ export const appRouter = router({
         if (input.workerAgents && input.workerAgents.length > 0) {
           const workerCode = generateWorkerCode(input.workerAgents[0], input.tools || []);
           await saveGeneratedCode(agentId, "worker", workerCode);
+        }
+        
+        // Track template completion if this was cloned from a template
+        if (input.templateUsageId) {
+          try {
+            const { markTemplateCompleted } = await import('./lib/templateAnalytics');
+            await markTemplateCompleted(input.templateUsageId, agentId);
+          } catch (error) {
+            console.error('Failed to track template completion:', error);
+            // Don't fail agent creation if tracking fails
+          }
         }
         
         return { id: agentId, agentId: agentId, success: true };
@@ -173,8 +188,9 @@ export const appRouter = router({
           
           // Validate agentType
           const validAgentTypes = ['supervisor', 'worker', 'custom'] as const;
-          const agentType = validAgentTypes.includes(config.agentType as any) 
-            ? (config.agentType as 'supervisor' | 'worker' | 'custom')
+          type AgentType = typeof validAgentTypes[number];
+          const agentType: AgentType = validAgentTypes.includes(config.agentType as AgentType) 
+            ? (config.agentType as AgentType)
             : 'custom';
           
           const generatedCode = generateCompleteCode({

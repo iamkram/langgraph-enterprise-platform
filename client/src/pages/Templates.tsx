@@ -10,20 +10,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { useAgentFormStore } from "@/stores/agentFormStore";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function Templates() {
   const [, setLocation] = useLocation();
   const { loadFromTemplate } = useAgentFormStore();
   const [selectedTemplate, setSelectedTemplate] = useState<AgentTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  
+  // Fetch template statistics
+  const { data: templateStats } = trpc.templates.getAllStats.useQuery();
+
+  // Helper to get stats for a template
+  const getTemplateStats = (templateId: string) => {
+    return templateStats?.find((s: any) => s.templateId === templateId);
+  };
 
   const categories = [
     { id: "all", label: "All Templates", count: agentTemplates.length },
+    { id: "popular", label: "Popular", count: templateStats?.filter((s: any) => s.totalClones > 0).length || 0 },
     { id: "financial", label: "Financial", count: agentTemplates.filter(t => t.category === "financial").length },
     { id: "customer-service", label: "Customer Service", count: agentTemplates.filter(t => t.category === "customer-service").length },
     { id: "research", label: "Research", count: agentTemplates.filter(t => t.category === "research").length },
     { id: "productivity", label: "Productivity", count: agentTemplates.filter(t => t.category === "productivity").length },
-    { id: "general", label: "General", count: agentTemplates.filter(t => t.category === "general").length },
   ];
 
   const filteredTemplates = selectedCategory === "all" 
@@ -39,9 +49,23 @@ export default function Templates() {
     }
   };
 
-  const handleCloneTemplate = (template: AgentTemplate) => {
+  const trackCloneMutation = trpc.templates.trackClone.useMutation();
+
+  const handleCloneTemplate = async (template: AgentTemplate) => {
     loadFromTemplate(template);
-    setLocation("/create-agent");
+    
+    // Track template clone
+    try {
+      const result = await trackCloneMutation.mutateAsync({ templateId: template.id });
+      // Store usage ID in session storage for later completion tracking
+      sessionStorage.setItem('templateUsageId', result.usageId.toString());
+      sessionStorage.setItem('templateId', template.id);
+    } catch (error) {
+      console.error('Failed to track template clone:', error);
+      // Don't block the user flow if tracking fails
+    }
+    
+    setLocation("/create");
   };
 
   return (
@@ -62,7 +86,7 @@ export default function Templates() {
                 Start with pre-configured templates and customize to your needs
               </p>
             </div>
-            <Button onClick={() => setLocation("/create-agent")} variant="outline">
+            <Button onClick={() => setLocation("/create")} variant="outline">
               Create from Scratch
             </Button>
           </div>
