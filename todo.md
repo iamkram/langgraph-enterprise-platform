@@ -297,7 +297,11 @@
 ## LangSmith Integration
 - [x] Install LangSmith SDK
 - [x] Create LangSmith integration service with RunTree
-- [ ] Enhance templates with expert prompts from LangSmith Hub
-- [ ] Add runtime tracing to agent execution
-- [ ] Configure LangSmith API credentials
-- [ ] Test end-to-end integration
+- [x] Enhance Financial Analysis template with expert prompts (3 workers)
+- [x] Enhance Customer Support template with expert prompts (3 workers)
+- [x] Enhance Research Assistant template with expert prompts (3 workers)
+- [x] Add runtime tracing to execution.ts (createTracedRun on start, updateTracedRun on completion)
+- [x] Configure LANGSMITH_API_KEY via webdev_request_secrets
+- [x] Configure LANGSMITH_PROJECT and LANGSMITH_ORG_ID
+- [x] Write vitest test to validate LangSmith integration
+- [x] Test end-to-end agent execution with tracing

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "./_core/trpc";
 import { generateSupervisorCode, generateWorkerCode, generateStateCode, generateWorkflowCode } from "./codeGeneration";
 import { invokeLLM } from "./_core/llm";
+import { createTracedRun, updateTracedRun } from "./lib/langsmith";
 
 // Execution input schema
 const executeAgentInput = z.object({
@@ -62,10 +63,20 @@ const executionResult = z.object({
  */
 async function simulateAgentExecution(
   config: z.infer<typeof executeAgentInput>["config"],
-  input: string
-): Promise<z.infer<typeof executionResult>> {
+  input: string,
+  userId?: number
+): Promise<z.infer<typeof executionResult> & { traceUrl?: string }> {
   const startTime = Date.now();
   const steps: any[] = [];
+  
+  // Create LangSmith trace for observability
+  const runId = await createTracedRun(
+    config.name,
+    "chain",
+    { input, agentType: config.agentType, workers: config.workers.length },
+    config.name,
+    { userId, model: config.model }
+  );
 
   try {
     // Security validation (if enabled)
@@ -117,6 +128,12 @@ async function simulateAgentExecution(
 
       const executionTime = Date.now() - startTime;
 
+      // Update LangSmith trace with success
+      const traceUrl = runId ? await updateTracedRun(runId, {
+        outputs: { output: typeof finalResponse.choices[0]?.message?.content === 'string' ? finalResponse.choices[0].message.content : "Execution completed", steps },
+        metadata: { executionTime, tokensUsed: finalResponse.usage?.total_tokens, cost: calculateCost(finalResponse.usage?.total_tokens || 0, config.model) }
+      }) : undefined;
+
       return {
         success: true,
         output: typeof finalResponse.choices[0]?.message?.content === 'string' ? finalResponse.choices[0].message.content : "Execution completed",
@@ -127,6 +144,7 @@ async function simulateAgentExecution(
           cost: calculateCost(finalResponse.usage?.total_tokens || 0, config.model),
           model: config.model,
         },
+        traceUrl,
       };
     } else {
       // Single agent execution
@@ -147,6 +165,12 @@ async function simulateAgentExecution(
 
       const executionTime = Date.now() - startTime;
 
+      // Update LangSmith trace with success
+      const traceUrl = runId ? await updateTracedRun(runId, {
+        outputs: { output: typeof response.choices[0]?.message?.content === 'string' ? response.choices[0].message.content : "Execution completed", steps },
+        metadata: { executionTime, tokensUsed: response.usage?.total_tokens, cost: calculateCost(response.usage?.total_tokens || 0, config.model) }
+      }) : undefined;
+
       return {
         success: true,
         output: typeof response.choices[0]?.message?.content === 'string' ? response.choices[0].message.content : "Execution completed",
@@ -157,10 +181,18 @@ async function simulateAgentExecution(
           cost: calculateCost(response.usage?.total_tokens || 0, config.model),
           model: config.model,
         },
+        traceUrl,
       };
     }
   } catch (error: any) {
     const executionTime = Date.now() - startTime;
+    
+    // Update LangSmith trace with error
+    const traceUrl = runId ? await updateTracedRun(runId, {
+      error: error.message || "Execution failed",
+      metadata: { executionTime, model: config.model }
+    }) : undefined;
+    
     return {
       success: false,
       error: error.message || "Execution failed",
@@ -169,6 +201,7 @@ async function simulateAgentExecution(
         executionTime,
         model: config.model,
       },
+      traceUrl,
     };
   }
 }
@@ -200,8 +233,8 @@ export const executionRouter = router({
       // Log execution
       console.log(`[Execution] User ${ctx.user.id} executing agent: ${input.config.name}`);
 
-      // Execute agent
-      const result = await simulateAgentExecution(input.config, input.input);
+      // Execute agent with LangSmith tracing
+      const result = await simulateAgentExecution(input.config, input.input, ctx.user.id);
 
       // TODO: Store execution history in database
       // await db.insertExecutionLog({
