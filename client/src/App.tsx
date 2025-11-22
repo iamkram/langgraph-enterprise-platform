@@ -21,6 +21,7 @@ function Router() {
       <Route path="/agents" component={AgentsList} />
       <Route path="/agents/create" component={CreateAgent} />
       <Route path="/create" component={CreateAgent} />
+      <Route path="/create-agent" component={CreateAgent} />
       <Route path="/agent/:id" component={AgentDetail} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/trace-analytics" component={TraceAnalytics} />      <Route path={"/templates"} component={Templates} />

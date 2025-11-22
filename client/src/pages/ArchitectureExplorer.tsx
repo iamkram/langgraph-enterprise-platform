@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu } from "lucide-react";
+import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLeft } from "lucide-react";
 import { architectureComponents, type ComponentDetail } from "@shared/architectureData";
 
 const diagrams = [
@@ -56,6 +57,7 @@ const layerColors: Record<string, string> = {
 };
 
 export default function ArchitectureExplorer() {
+  const [, setLocation] = useLocation();
   const [selectedComponent, setSelectedComponent] = useState<ComponentDetail | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
@@ -79,6 +81,15 @@ export default function ArchitectureExplorer() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
         <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/")}
+            className="mb-4 -ml-2"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
           <h1 className="text-4xl font-bold mb-2">Architecture Explorer</h1>
           <p className="text-muted-foreground">
             Interactive documentation for the Enterprise LangGraph Agent Scaffolding Platform

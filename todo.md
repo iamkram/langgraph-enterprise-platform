@@ -351,3 +351,16 @@
 - [x] Add PageHeader to AgentDetail page with breadcrumb (Home > Agents > {Agent Name})
 - [x] Add PageHeader to TraceAnalytics page with breadcrumb (Home > Analytics)
 - [ ] Test navigation flow across all pages
+
+
+## Link Testing & 404 Error Fixes
+- [x] Test home page links (Create New Agent, Browse Templates, View Architecture, View all agents)
+- [x] Test Templates page - all template clone buttons (6/6 templates working)
+- [x] Test breadcrumb navigation on all pages
+- [x] Test agent detail page links
+- [x] Fix template cloning 404 errors (added /create-agent route to App.tsx)
+- [x] Fix any broken navigation routes
+- [x] Verify all routes are registered in App.tsx
+- [x] Test complete user flow end-to-end
+- [x] Add Back to Home button to Architecture Explorer page
+- [x] Document all findings in NAVIGATION_TEST_REPORT.md
