@@ -13,6 +13,8 @@ import Templates from "./pages/Templates";
 import ArchitectureExplorer from "./pages/ArchitectureExplorer";
 import TraceAnalytics from "./pages/TraceAnalytics";
 import Library from "./pages/Library";
+import ToolDetail from "./pages/ToolDetail";
+import LibraryAgentDetail from "./pages/LibraryAgentDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/trace-analytics" component={TraceAnalytics} />
       <Route path="/library" component={Library} />
+      <Route path="/library/tool/:id" component={ToolDetail} />
+      <Route path="/library/agent/:id" component={LibraryAgentDetail} />
       <Route path={"/templates"} component={Templates} />
       <Route path={"/architecture"} component={ArchitectureExplorer} />      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

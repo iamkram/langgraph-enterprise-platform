@@ -492,3 +492,42 @@
 - [ ] Implement streaming responses for AI generation
 - [ ] Add real-time validation indicators
 - [ ] Create tool/agent usage analytics dashboard
+
+
+---
+
+# Library Integration & Usage (Current Session)
+
+## Save to Library Integration
+- [x] Add "Save to Library" button to AIToolCreator after generation
+- [x] Add "Save to Library" button to AIAgentCreator after generation
+- [x] Add public/private toggle when saving
+- [x] Add tags input field when saving
+- [x] Show success toast after saving to library
+- [ ] Test save functionality with various tools and agents
+
+## Library Detail Pages
+- [x] Create ToolDetail page component (/library/tool/:id)
+- [x] Create LibraryAgentDetail page component (/library/agent/:id)
+- [x] Display full tool specification with JSON schema
+- [x] Display full agent configuration with all fields
+- [x] Show usage statistics and rating breakdown
+- [x] Add "Use This Tool" button on tool detail page
+- [x] Add "Clone This Agent" button on agent detail page
+- [ ] Add user reviews section (future enhancement)
+- [x] Add routes to App.tsx
+- [ ] Test detail page navigation from library
+
+## Library Item Usage
+- [x] Implement "Use This Tool" functionality (add to wizard)
+- [x] Implement "Clone This Agent" functionality (pre-fill wizard)
+- [x] Add library item to wizard state when selected (via sessionStorage)
+- [x] Navigate to appropriate wizard step after selection
+- [ ] Test tool usage in agent creation wizard
+- [ ] Test agent cloning workflow end-to-end
+
+## Testing
+- [ ] Write vitest tests for save to library functionality (deferred - library router already has 13 passing tests)
+- [ ] Test detail page data loading (will test in browser)
+- [ ] Test usage/clone functionality (will test in browser)
+- [x] Save checkpoint with all features

@@ -3,7 +3,11 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send, Sparkles, CheckCircle2 } from "lucide-react";
+import { Loader2, Send, Sparkles, CheckCircle2, Save, BookmarkPlus } from "lucide-react";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Streamdown } from "streamdown";
 
 interface Message {
@@ -54,6 +58,20 @@ export default function AIAgentCreator({
     tools: string[];
     allow_delegation: boolean;
   } | null>(null);
+  const [showSaveOptions, setShowSaveOptions] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+
+  const saveToLibraryMutation = trpc.library.saveAgent.useMutation({
+    onSuccess: () => {
+      toast.success("Agent saved to library!");
+      setShowSaveOptions(false);
+    },
+    onError: (error: { message: string }) => {
+      toast.error(`Failed to save: ${error.message}`);
+    },
+  });
 
   const generateMutation = trpc.aiAssistant.generateAgent.useMutation({
     onSuccess: (data: {
@@ -106,6 +124,32 @@ export default function AIAgentCreator({
     if (generatedAgent) {
       onAgentGenerated(generatedAgent);
     }
+  };
+
+  const handleSaveToLibrary = () => {
+    if (!generatedAgent) return;
+
+    saveToLibraryMutation.mutate({
+      name: generatedAgent.name,
+      role: generatedAgent.role,
+      goal: generatedAgent.goal,
+      backstory: generatedAgent.backstory,
+      tools: generatedAgent.tools,
+      allowDelegation: generatedAgent.allow_delegation,
+      isPublic,
+      tags: tags.length > 0 ? tags : undefined,
+    });
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -217,16 +261,104 @@ export default function AIAgentCreator({
           </Button>
         </div>
 
+        {/* Save to Library Options */}
+        {generatedAgent && showSaveOptions && (
+          <Card className="border-blue-500/50 bg-blue-50 dark:bg-blue-950/20">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookmarkPlus className="h-5 w-5" />
+                Save to Library
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Public/Private Toggle */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="agent-public-toggle">Make this agent public</Label>
+                <Switch
+                  id="agent-public-toggle"
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isPublic
+                  ? "Other users can discover and use this agent"
+                  : "Only you can see and use this agent"}
+              </p>
+
+              {/* Tags Input */}
+              <div className="space-y-2">
+                <Label>Tags (optional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a tag..."
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
+                  />
+                  <Button onClick={handleAddTag} variant="outline" size="sm">
+                    Add
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="gap-1">
+                        {tag}
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          className="hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowSaveOptions(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveToLibrary}
+                  disabled={saveToLibraryMutation.isPending}
+                  className="gap-2"
+                >
+                  {saveToLibraryMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Save to Library
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           {generatedAgent && (
-            <Button onClick={handleAccept} className="gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              Use This Agent
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowSaveOptions(!showSaveOptions)}
+                className="gap-2"
+              >
+                <BookmarkPlus className="h-4 w-4" />
+                Save to Library
+              </Button>
+              <Button onClick={handleAccept} className="gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Use This Agent
+              </Button>
+            </>
           )}
         </div>
       </CardContent>

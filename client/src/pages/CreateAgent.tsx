@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAgentFormStore } from "@/stores/agentFormStore";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import Step1BasicInfo from "@/components/wizard/Step1BasicInfo";
@@ -22,8 +23,39 @@ const steps = [
 ];
 
 export default function CreateAgent() {
-  const { currentStep, nextStep, previousStep, ...formData } = useAgentFormStore();
+  const { currentStep, nextStep, previousStep, addWorkerAgent, addTool, ...formData } = useAgentFormStore();
   const [, setLocation] = useLocation();
+
+  // Check for pending library items on mount
+  useEffect(() => {
+    // Check for pending agent from library
+    const pendingAgent = sessionStorage.getItem("pendingAgent");
+    if (pendingAgent) {
+      try {
+        const agent = JSON.parse(pendingAgent);
+        // Add agent to worker list
+        addWorkerAgent(agent);
+        toast.success(`Added ${agent.name} from library!`);
+        sessionStorage.removeItem("pendingAgent");
+      } catch (error) {
+        console.error("Failed to parse pending agent:", error);
+      }
+    }
+
+    // Check for pending tool from library
+    const pendingTool = sessionStorage.getItem("pendingTool");
+    if (pendingTool) {
+      try {
+        const tool = JSON.parse(pendingTool);
+        // Add tool to tools list
+        addTool(tool);
+        toast.success(`Added ${tool.name} from library!`);
+        sessionStorage.removeItem("pendingTool");
+      } catch (error) {
+        console.error("Failed to parse pending tool:", error);
+      }
+    }
+  }, [addWorkerAgent, addTool]);
   
   const createMutation = trpc.agents.create.useMutation({
     onSuccess: (data) => {
