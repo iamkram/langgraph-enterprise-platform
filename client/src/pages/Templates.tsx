@@ -22,6 +22,7 @@ export default function Templates() {
     { id: "financial", label: "Financial", count: agentTemplates.filter(t => t.category === "financial").length },
     { id: "customer-service", label: "Customer Service", count: agentTemplates.filter(t => t.category === "customer-service").length },
     { id: "research", label: "Research", count: agentTemplates.filter(t => t.category === "research").length },
+    { id: "productivity", label: "Productivity", count: agentTemplates.filter(t => t.category === "productivity").length },
     { id: "general", label: "General", count: agentTemplates.filter(t => t.category === "general").length },
   ];
 
@@ -72,7 +73,7 @@ export default function Templates() {
       <div className="container py-8">
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             {categories.map(cat => (
               <TabsTrigger key={cat.id} value={cat.id} className="flex items-center gap-2">
                 {cat.label}

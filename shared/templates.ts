@@ -7,7 +7,7 @@ export interface AgentTemplate {
   id: string;
   name: string;
   description: string;
-  category: "financial" | "customer-service" | "research" | "general";
+  category: "financial" | "customer-service" | "research" | "general" | "productivity";
   icon: string;
   difficulty: "beginner" | "intermediate" | "advanced";
   estimatedSetupTime: string;
@@ -490,6 +490,364 @@ supervisor = create_supervisor(
 supervisor = create_supervisor(
     workers=["data_querier", "statistical_analyst", "visualization_creator"],
     tools=[execute_sql, generate_chart]
+)`
+  },
+
+  {
+    id: "executive-assistant",
+    name: "Executive Assistant (Microsoft 365)",
+    description: "AI-powered executive assistant with Microsoft 365 integration, intelligent email management, knowledge graph, and productivity automation for executives managing 30+ direct reports",
+    category: "productivity",
+    icon: "👔",
+    difficulty: "advanced",
+    estimatedSetupTime: "60 seconds",
+    config: {
+      name: "Executive Assistant",
+      description: "Intelligent assistant that manages emails, calendar, knowledge base, tasks, and meetings using Microsoft 365 integration with automatic learning and minimal maintenance",
+      agentType: "supervisor",
+      model: "gpt-4o",
+      workers: [
+        {
+          name: "email_manager",
+          description: "Analyzes email priority, drafts responses, and extracts action items",
+          systemPrompt: "You are an executive email manager. Analyze incoming emails for priority and urgency, draft context-aware responses based on previous conversations and knowledge base, extract action items and deadlines, and categorize emails by project. Always maintain professional tone and consider the executive's communication style."
+        },
+        {
+          name: "calendar_manager",
+          description: "Manages calendar, finds meeting times, and resolves conflicts",
+          systemPrompt: "You are a calendar management specialist. Find optimal meeting times considering attendee availability and time zones, resolve scheduling conflicts, protect focus time blocks, prepare meeting context, and track action items. Prioritize efficiency and minimize meeting overhead."
+        },
+        {
+          name: "knowledge_manager",
+          description: "Maintains knowledge graph and searches organizational knowledge",
+          systemPrompt: "You are a knowledge management expert. Index and search across emails, OneDrive, SharePoint, and Teams. Build and maintain a knowledge graph of people, projects, topics, and decisions. Extract relevant context for email drafting and decision-making. Ensure zero-maintenance automatic updates."
+        },
+        {
+          name: "task_coordinator",
+          description: "Tracks tasks across projects and monitors team progress",
+          systemPrompt: "You are a task coordination specialist managing 30+ direct reports. Track tasks across all projects, monitor progress, suggest optimal task assignments, escalate blockers, and generate executive summaries. Focus on delegation efficiency and workload balance."
+        },
+        {
+          name: "meeting_assistant",
+          description: "Prepares meeting briefs and tracks follow-ups",
+          systemPrompt: "You are a meeting preparation expert. Generate pre-meeting briefs with relevant context, provide attendee background, suggest agenda items, extract post-meeting action items, and track follow-ups. Ensure executives are always well-prepared and follow-through is maintained."
+        }
+      ],
+      tools: [
+        {
+          name: "analyze_email_priority",
+          description: "Analyzes email to determine priority score and urgency level",
+          parameters: {
+            email_id: {
+              type: "string",
+              description: "The unique identifier of the email",
+              required: true
+            },
+            sender_email: {
+              type: "string",
+              description: "Email address of the sender",
+              required: true
+            },
+            subject: {
+              type: "string",
+              description: "Email subject line",
+              required: true
+            },
+            body_preview: {
+              type: "string",
+              description: "First 200 characters of email body",
+              required: true
+            }
+          }
+        },
+        {
+          name: "draft_email_response",
+          description: "Generates context-aware email response based on conversation history",
+          parameters: {
+            email_id: {
+              type: "string",
+              description: "ID of email to respond to",
+              required: true
+            },
+            response_type: {
+              type: "string",
+              description: "Type: acknowledge, detailed_response, decline, delegate",
+              required: true
+            },
+            key_points: {
+              type: "array",
+              description: "Specific points to address in response",
+              required: false
+            }
+          }
+        },
+        {
+          name: "extract_action_items",
+          description: "Identifies tasks, deadlines, and follow-ups from email",
+          parameters: {
+            email_id: {
+              type: "string",
+              description: "Email to analyze",
+              required: true
+            },
+            email_body: {
+              type: "string",
+              description: "Full email content",
+              required: true
+            }
+          }
+        },
+        {
+          name: "search_similar_emails",
+          description: "Finds previous emails related to current topic or sender",
+          parameters: {
+            topic_keywords: {
+              type: "array",
+              description: "Keywords to search for",
+              required: true
+            },
+            date_range_days: {
+              type: "number",
+              description: "Search last N days (default: 90)",
+              required: false
+            }
+          }
+        },
+        {
+          name: "find_available_slots",
+          description: "Searches calendar for available meeting times",
+          parameters: {
+            duration_minutes: {
+              type: "number",
+              description: "Meeting length",
+              required: true
+            },
+            attendees: {
+              type: "array",
+              description: "List of attendee email addresses",
+              required: true
+            },
+            date_range: {
+              type: "object",
+              description: "Start and end dates for search",
+              required: true
+            }
+          }
+        },
+        {
+          name: "schedule_meeting",
+          description: "Creates calendar event with specified attendees",
+          parameters: {
+            subject: {
+              type: "string",
+              description: "Meeting title",
+              required: true
+            },
+            start_time: {
+              type: "string",
+              description: "ISO 8601 datetime",
+              required: true
+            },
+            end_time: {
+              type: "string",
+              description: "ISO 8601 datetime",
+              required: true
+            },
+            attendees: {
+              type: "array",
+              description: "Email addresses",
+              required: true
+            }
+          }
+        },
+        {
+          name: "search_knowledge_base",
+          description: "Full-text search across emails, documents, and knowledge graph",
+          parameters: {
+            query: {
+              type: "string",
+              description: "Search query",
+              required: true
+            },
+            sources: {
+              type: "array",
+              description: "Sources to search: email, onedrive, sharepoint, teams",
+              required: false
+            }
+          }
+        },
+        {
+          name: "query_knowledge_graph",
+          description: "Graph traversal queries to find relationships and connections",
+          parameters: {
+            entity_type: {
+              type: "string",
+              description: "Entity type: person, project, topic, document",
+              required: true
+            },
+            entity_id: {
+              type: "string",
+              description: "Entity identifier",
+              required: true
+            },
+            depth: {
+              type: "number",
+              description: "Traversal depth (default: 2)",
+              required: false
+            }
+          }
+        },
+        {
+          name: "get_project_context",
+          description: "Retrieves comprehensive information about a specific project",
+          parameters: {
+            project_name: {
+              type: "string",
+              description: "Project identifier",
+              required: true
+            },
+            include_team: {
+              type: "boolean",
+              description: "Include team members (default: true)",
+              required: false
+            }
+          }
+        },
+        {
+          name: "list_open_tasks",
+          description: "Retrieves all pending tasks across projects and direct reports",
+          parameters: {
+            filter_by_project: {
+              type: "string",
+              description: "Optional project name filter",
+              required: false
+            },
+            due_within_days: {
+              type: "number",
+              description: "Tasks due in next N days",
+              required: false
+            }
+          }
+        },
+        {
+          name: "generate_project_summary",
+          description: "Creates executive summary of project status",
+          parameters: {
+            project_name: {
+              type: "string",
+              description: "Specific project (default: all projects)",
+              required: false
+            },
+            include_metrics: {
+              type: "boolean",
+              description: "Include KPIs (default: true)",
+              required: false
+            }
+          }
+        },
+        {
+          name: "generate_meeting_brief",
+          description: "Creates pre-meeting context summary",
+          parameters: {
+            event_id: {
+              type: "string",
+              description: "Meeting event ID",
+              required: true
+            },
+            include_previous_meetings: {
+              type: "boolean",
+              description: "Include history (default: true)",
+              required: false
+            }
+          }
+        },
+        {
+          name: "get_attendee_profiles",
+          description: "Provides background information on meeting participants",
+          parameters: {
+            attendee_emails: {
+              type: "array",
+              description: "List of participant emails",
+              required: true
+            },
+            include_recent_interactions: {
+              type: "boolean",
+              description: "Include interaction history (default: true)",
+              required: false
+            }
+          }
+        }
+      ],
+      security: {
+        enablePiiDetection: true,
+        enableGuardrails: true,
+        enableCheckpointing: true
+      }
+    },
+    useCases: [
+      "Intelligent email triage and response drafting for executives",
+      "Automated calendar management with conflict resolution",
+      "Personal knowledge base built from Microsoft 365 data",
+      "Multi-project tracking across 30+ direct reports",
+      "Meeting preparation with context and attendee intelligence",
+      "Zero-maintenance knowledge graph that learns automatically",
+      "Task coordination and delegation recommendations",
+      "Executive productivity optimization"
+    ],
+    prerequisites: [
+      "Microsoft 365 account (E3 or E5 license recommended)",
+      "Microsoft Graph API permissions: Mail.ReadWrite, Calendars.ReadWrite, Files.Read.All, Sites.Read.All, User.Read.All, Chat.Read",
+      "Azure AD app registration for OAuth authentication",
+      "OneDrive and SharePoint sites configured",
+      "Teams integration enabled",
+      "Initial configuration of priority rules and approval workflows"
+    ],
+    codePreview: `# Executive Assistant Agent with Microsoft 365 Integration
+supervisor = create_supervisor(
+    workers=[
+        "email_manager",
+        "calendar_manager", 
+        "knowledge_manager",
+        "task_coordinator",
+        "meeting_assistant"
+    ],
+    tools=[
+        # Email Management (5 tools)
+        analyze_email_priority,
+        draft_email_response,
+        extract_action_items,
+        search_similar_emails,
+        categorize_email,
+        
+        # Calendar Management (4 tools)
+        find_available_slots,
+        schedule_meeting,
+        suggest_reschedule,
+        get_meeting_context,
+        
+        # Knowledge Management (4 tools)
+        search_knowledge_base,
+        query_knowledge_graph,
+        extract_document_knowledge,
+        get_project_context,
+        
+        # Task Coordination (2 tools)
+        list_open_tasks,
+        generate_project_summary,
+        
+        # Meeting Assistant (2 tools)
+        generate_meeting_brief,
+        get_attendee_profiles,
+        
+        # Microsoft Graph Integration (3 tools)
+        query_microsoft_graph_insights,
+        find_expert_on_topic,
+        search_teams_conversations
+    ],
+    microsoft_365_integration=True,
+    auto_learning=True,
+    checkpointing=True,
+    security_level="high"
 )`
   }
 ];

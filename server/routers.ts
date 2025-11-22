@@ -170,10 +170,17 @@ export const appRouter = router({
         if (!completeCode || !completeCode.code) {
           const { generateCompleteCode } = await import('./codeGeneration');
           const { saveGeneratedCode } = await import('./db');
+          
+          // Validate agentType
+          const validAgentTypes = ['supervisor', 'worker', 'custom'] as const;
+          const agentType = validAgentTypes.includes(config.agentType as any) 
+            ? (config.agentType as 'supervisor' | 'worker' | 'custom')
+            : 'custom';
+          
           const generatedCode = generateCompleteCode({
             name: config.name,
             description: config.description || '',
-            agentType: config.agentType,
+            agentType,
             workerAgents: JSON.parse(config.workerAgents || '[]'),
             tools: JSON.parse(config.tools || '[]'),
             modelName: config.modelName,
