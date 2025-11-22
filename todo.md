@@ -542,4 +542,27 @@
 - [x] Update Library.tsx to make agent names clickable links to /library/agent/:id
 - [x] Test navigation from library list to detail pages (both tools and agents work perfectly)
 - [x] Fix JSON.parse errors in detail pages (parameters and tags are already objects)
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+
+---
+
+# LangSmith Hub Integration for Agent System Prompts
+
+## Research & Setup
+- [x] Research LangSmith Hub API for fetching prompts (no public API available)
+- [x] Identify relevant prompt categories (agents: 584 prompts, autonomous agents: 112 prompts)
+- [x] Test API access and response format (web-only, no programmatic access)
+- [x] Select 3-5 high-quality example prompts for agent generation (saved to langsmith_hub_examples.md)
+
+## Backend Implementation
+- [x] Create function to fetch LangSmith Hub prompts (hardcoded examples instead)
+- [x] Update aiAssistantRouter.generateAgent to include Hub examples
+- [x] Add Hub prompts to system prompt context (4 examples: superb_system_instruction_prompt, open-interpreter-system, synthetic-training-data, superagent)
+- [x] Handle API errors gracefully with fallback behavior (not needed - using hardcoded examples)
+
+## Testing & Validation
+- [x] Test agent generation with Hub-informed prompts (tested with social media strategist)
+- [x] Compare quality of generated agents (before vs after - more engaging and professional)
+- [x] Document improvements in agent specifications (saved to hub_informed_test_result.md)
+- [ ] Save checkpoint with LangSmith Hub integration
