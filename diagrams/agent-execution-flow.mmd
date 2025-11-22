@@ -1,0 +1,49 @@
+stateDiagram-v2
+    [*] --> LoadConfig: User Triggers Test Run
+    
+    LoadConfig --> ValidateInput: Load Agent Config
+    ValidateInput --> InitializeState: Validate User Input
+    
+    InitializeState --> SupervisorNode: Create AgentState
+    
+    state SupervisorNode {
+        [*] --> AnalyzeTask
+        AnalyzeTask --> RouteToWorker: Determine Worker
+        RouteToWorker --> [*]
+    }
+    
+    SupervisorNode --> WorkerNode: Delegate Task
+    
+    state WorkerNode {
+        [*] --> ExecuteTool
+        ExecuteTool --> ProcessResult
+        ProcessResult --> [*]
+    }
+    
+    WorkerNode --> CheckComplete: Return Result
+    
+    CheckComplete --> SupervisorNode: Not Complete
+    CheckComplete --> SaveCheckpoint: Complete
+    
+    SaveCheckpoint --> ReturnResult: Store State
+    ReturnResult --> [*]: Display to User
+    
+    note right of SupervisorNode
+        Uses LLM to analyze
+        task and route to
+        appropriate worker
+    end note
+    
+    note right of WorkerNode
+        Executes tools:
+        - search_financial_data
+        - analyze_sentiment
+        - calculate_risk_metrics
+    end note
+    
+    note right of SaveCheckpoint
+        Checkpoint enables:
+        - Resume execution
+        - Audit trail
+        - Debugging
+    end note

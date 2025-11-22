@@ -1,0 +1,75 @@
+graph TB
+    subgraph "AWS Cloud"
+        subgraph "Frontend"
+            CF[CloudFront CDN]
+            S3Web[S3 Static Hosting<br/>React App]
+        end
+        
+        subgraph "Application Tier"
+            ALB[Application Load Balancer]
+            ECS1[ECS Fargate<br/>tRPC Server 1]
+            ECS2[ECS Fargate<br/>tRPC Server 2]
+            ECS3[ECS Fargate<br/>tRPC Server 3]
+        end
+        
+        subgraph "Data Tier"
+            RDS[(RDS MySQL/TiDB<br/>Multi-AZ)]
+            S3Code[S3 Bucket<br/>Generated Code]
+            ElastiCache[ElastiCache Redis<br/>Session Store]
+        end
+        
+        subgraph "Monitoring"
+            CW[CloudWatch<br/>Logs & Metrics]
+            XRay[X-Ray<br/>Distributed Tracing]
+        end
+    end
+    
+    subgraph "External"
+        Users[Users]
+        LLM[LLM API<br/>OpenAI]
+        Jira[Jira Cloud]
+    end
+    
+    Users --> CF
+    CF --> S3Web
+    S3Web --> ALB
+    ALB --> ECS1
+    ALB --> ECS2
+    ALB --> ECS3
+    
+    ECS1 --> RDS
+    ECS2 --> RDS
+    ECS3 --> RDS
+    
+    ECS1 --> S3Code
+    ECS2 --> S3Code
+    ECS3 --> S3Code
+    
+    ECS1 --> ElastiCache
+    ECS2 --> ElastiCache
+    ECS3 --> ElastiCache
+    
+    ECS1 --> LLM
+    ECS2 --> LLM
+    ECS3 --> LLM
+    
+    ECS1 --> Jira
+    ECS2 --> Jira
+    ECS3 --> Jira
+    
+    ECS1 --> CW
+    ECS2 --> CW
+    ECS3 --> CW
+    
+    ECS1 --> XRay
+    ECS2 --> XRay
+    ECS3 --> XRay
+    
+    style CF fill:#ff9900,color:#fff
+    style ALB fill:#ff9900,color:#fff
+    style ECS1 fill:#ff9900,color:#fff
+    style ECS2 fill:#ff9900,color:#fff
+    style ECS3 fill:#ff9900,color:#fff
+    style RDS fill:#3b48cc,color:#fff
+    style S3Web fill:#569a31,color:#fff
+    style S3Code fill:#569a31,color:#fff
