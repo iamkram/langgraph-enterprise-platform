@@ -11,6 +11,7 @@ import Step2WorkerConfig from "@/components/wizard/Step2WorkerConfig";
 import Step3ToolSelection from "@/components/wizard/Step3ToolSelection";
 import Step4SecuritySettings from "@/components/wizard/Step4SecuritySettings";
 import Step5Review from "@/components/wizard/Step5Review";
+import { PageHeader } from "@/components/PageHeader";
 
 const steps = [
   { number: 1, title: "Basic Information", description: "Agent name and type" },
@@ -72,20 +73,15 @@ export default function CreateAgent() {
   const currentStepInfo = steps[currentStep - 1];
   
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Agents
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Create New Agent</h1>
-        <p className="text-muted-foreground mt-2">
-          Build a LangGraph agent with our step-by-step wizard
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Create New Agent"
+        description="Build a LangGraph agent with our step-by-step wizard"
+        breadcrumbs={[
+          { label: "Create Agent" }
+        ]}
+      />
+      <div className="container mx-auto py-8 max-w-4xl">
       
       {/* Progress Bar */}
       <div className="mb-8">
@@ -180,5 +176,6 @@ export default function CreateAgent() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

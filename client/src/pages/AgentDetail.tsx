@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import TestRunDialog from "@/components/TestRunDialog";
 import { Link, useParams } from "wouter";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function AgentDetail() {
   const params = useParams();
@@ -38,24 +39,16 @@ export default function AgentDetail() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto py-8 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Agents
-            </Button>
-          </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{agent.name}</h1>
-              {agent.description && (
-                <p className="text-muted-foreground">{agent.description}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
+    <>
+      <PageHeader
+        title={agent.name}
+        description={agent.description || undefined}
+        breadcrumbs={[
+          { label: "Agents", href: "/agents" },
+          { label: agent.name }
+        ]}
+        actions={
+          <>
               <TestRunDialog
                 agentConfig={{
                   name: agent.name,
@@ -79,9 +72,11 @@ export default function AgentDetail() {
               <Badge variant="secondary" className="capitalize text-base px-4 py-2">
                 {agent.agentType}
               </Badge>
-            </div>
-          </div>
-        </div>
+          </>
+        }
+      />
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <div className="container mx-auto py-8 max-w-6xl">
         
         {/* Configuration Details */}
         <Card className="mb-8">
@@ -163,5 +158,6 @@ export default function AgentDetail() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

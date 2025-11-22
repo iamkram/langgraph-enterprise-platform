@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { Loader2, TrendingUp, Clock, DollarSign, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function TraceAnalytics() {
   const { data: metrics, isLoading } = trpc.traceAnalytics.getTraceMetrics.useQuery({});
@@ -18,15 +19,16 @@ export default function TraceAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Trace Analytics</h1>
-          <p className="text-muted-foreground">
-            Monitor agent performance, execution metrics, and LangSmith traces
-          </p>
-        </div>
+    <>
+      <PageHeader
+        title="Trace Analytics"
+        description="Monitor agent performance, execution metrics, and LangSmith traces"
+        breadcrumbs={[
+          { label: "Analytics" }
+        ]}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <div className="container mx-auto py-8 max-w-7xl">
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -228,5 +230,6 @@ export default function TraceAnalytics() {
         </Card>
       </div>
     </div>
+    </>
   );
 }
