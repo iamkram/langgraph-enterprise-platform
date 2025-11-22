@@ -9,6 +9,8 @@ import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLef
 import { Link } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { architectureComponents, type ComponentDetail } from "@shared/architectureData";
+import { diagramHotspots } from "@shared/diagramHotspots";
+import { DiagramHotspot } from "@/components/DiagramHotspot";
 
 const diagrams = [
   {
@@ -62,6 +64,7 @@ export default function ArchitectureExplorer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
   const [selectedDiagram, setSelectedDiagram] = useState<typeof diagrams[0] | null>(null);
+  const [activeTab, setActiveTab] = useState("system");
 
   const components = Object.values(architectureComponents);
   
@@ -106,7 +109,7 @@ export default function ArchitectureExplorer() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="system" className="w-full">
+                <Tabs defaultValue="system" className="w-full" onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-5">
                     {diagrams.map(diagram => {
                       const Icon = diagram.icon;
@@ -125,22 +128,34 @@ export default function ArchitectureExplorer() {
                           <h3 className="font-semibold text-lg">{diagram.name}</h3>
                           <p className="text-sm text-muted-foreground">{diagram.description}</p>
                         </div>
-                        <div 
-                          className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                          onClick={() => setSelectedDiagram(diagram)}
-                        >
-                          <img 
-                            src={diagram.image} 
-                            alt={diagram.name}
-                            className="w-full h-auto"
-                          />
+                        <div className="relative">
+                          <div 
+                            className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                            onClick={() => setSelectedDiagram(diagram)}
+                          >
+                            <img 
+                              src={diagram.image} 
+                              alt={diagram.name}
+                              className="w-full h-auto"
+                            />
+                          </div>
+                          {/* Interactive Hotspots */}
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="relative w-full h-full pointer-events-auto">
+                              {diagramHotspots[diagram.id]?.map((hotspot) => (
+                                <DiagramHotspot key={hotspot.id} hotspot={hotspot} />
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground text-center">
-                          Click image to view full size
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Click on components in the list below to see detailed information
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground text-center">
+                            Click image to view full size • Click <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px]">i</span> hotspots for component details
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Click on components in the list below to see detailed information
+                          </p>
+                        </div>
                       </div>
                     </TabsContent>
                   ))}
