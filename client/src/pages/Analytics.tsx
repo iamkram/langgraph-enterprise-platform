@@ -1,7 +1,9 @@
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart, Activity, Users, Clock } from "lucide-react";
+import { BarChart, Activity, Users, Clock, ArrowLeft } from "lucide-react";
 
 /**
  * Analytics Dashboard
@@ -9,6 +11,7 @@ import { BarChart, Activity, Users, Clock } from "lucide-react";
  * Displays usage metrics, daily aggregations, and agent performance statistics.
  */
 export default function Analytics() {
+  const [, setLocation] = useLocation();
   const today = new Date().toISOString().split('T')[0];
   
   const { data: metrics, isLoading } = trpc.analytics.getDailyMetrics.useQuery({
@@ -46,6 +49,15 @@ export default function Analytics() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setLocation("/")}
+          className="mb-4 -ml-2"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
         <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
         <p className="text-muted-foreground">
           Usage metrics and performance statistics for {today}
