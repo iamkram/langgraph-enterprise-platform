@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2 } from "lucide-react";
+import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { useAgentFormStore } from "@/stores/agentFormStore";
 
 export default function Templates() {
@@ -49,6 +49,15 @@ export default function Templates() {
         <div className="container py-8">
           <div className="flex items-center justify-between">
             <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation("/")}
+                className="mb-4 -ml-2"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+              </Button>
               <h1 className="text-4xl font-bold tracking-tight">Agent Templates</h1>
               <p className="text-muted-foreground mt-2">
                 Start with pre-configured templates and customize to your needs
