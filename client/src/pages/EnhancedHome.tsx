@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { trpc } from "@/lib/trpc";
 import { APP_TITLE } from "@/const";
 import { Link } from "wouter";
-import { Loader2, Send, Sparkles, FileCode, LayoutTemplate, BarChart3 } from "lucide-react";
+import { Loader2, Send, Sparkles, FileCode, LayoutTemplate, BarChart3, Library as LibraryIcon } from "lucide-react";
 import { Streamdown } from "streamdown";
 
 interface Message {
@@ -193,6 +193,15 @@ export default function EnhancedHome() {
                     <div className="text-left">
                       <div className="font-semibold">Browse Templates</div>
                       <div className="text-xs text-muted-foreground">Start from pre-built templates</div>
+                    </div>
+                  </Button>
+                </Link>
+                <Link href="/library">
+                  <Button className="w-full justify-start h-auto py-4" variant="outline">
+                    <LibraryIcon className="h-5 w-5 mr-3" />
+                    <div className="text-left">
+                      <div className="font-semibold">Browse Library</div>
+                      <div className="text-xs text-muted-foreground">Explore custom tools and agents</div>
                     </div>
                   </Button>
                 </Link>

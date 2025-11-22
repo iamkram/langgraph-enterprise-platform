@@ -127,3 +127,57 @@ export const dailyMetrics = mysqlTable("daily_metrics", {
 
 export type DailyMetric = typeof dailyMetrics.$inferSelect;
 export type InsertDailyMetric = typeof dailyMetrics.$inferInsert;
+
+// Custom tools library
+export const customTools = mysqlTable("custom_tools", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  parameters: text("parameters").notNull(), // JSON schema
+  isPublic: int("is_public").default(0).notNull(), // 0 = private, 1 = public
+  usageCount: int("usage_count").default(0).notNull(),
+  rating: int("rating").default(0).notNull(), // Sum of all ratings
+  ratingCount: int("rating_count").default(0).notNull(), // Number of ratings
+  tags: text("tags"), // JSON array of tags
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomTool = typeof customTools.$inferSelect;
+export type InsertCustomTool = typeof customTools.$inferInsert;
+
+// Custom agents library
+export const customAgents = mysqlTable("custom_agents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  role: text("role").notNull(),
+  goal: text("goal").notNull(),
+  backstory: text("backstory").notNull(),
+  tools: text("tools").notNull(), // JSON array of tool names
+  allowDelegation: int("allow_delegation").default(0).notNull(), // 0 = false, 1 = true
+  isPublic: int("is_public").default(0).notNull(), // 0 = private, 1 = public
+  usageCount: int("usage_count").default(0).notNull(),
+  rating: int("rating").default(0).notNull(), // Sum of all ratings
+  ratingCount: int("rating_count").default(0).notNull(), // Number of ratings
+  tags: text("tags"), // JSON array of tags
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomAgent = typeof customAgents.$inferSelect;
+export type InsertCustomAgent = typeof customAgents.$inferInsert;
+
+// Ratings table for tools and agents
+export const ratings = mysqlTable("ratings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  itemType: varchar("item_type", { length: 20 }).notNull(), // "tool" or "agent"
+  itemId: int("item_id").notNull(),
+  rating: int("rating").notNull(), // 1-5 stars
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type Rating = typeof ratings.$inferSelect;
+export type InsertRating = typeof ratings.$inferInsert;
