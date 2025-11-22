@@ -1,11 +1,10 @@
-import { Client } from "langsmith";
-import { ENV } from "../_core/env";
+import { Client, RunTree } from "langsmith";
 
 /**
  * LangSmith Integration Service
  * 
  * Provides centralized access to LangSmith features:
- * - Tracing & Observability
+ * - Tracing & Observability with RunTree
  * - Prompt Management from Hub
  * - Evaluation Framework
  * - Monitoring & Datasets
@@ -13,11 +12,13 @@ import { ENV } from "../_core/env";
 
 let _client: Client | null = null;
 
+// Store active run trees for updating later
+const activeRuns = new Map<string, RunTree>();
+
 /**
  * Get or create LangSmith client instance
  */
 export function getLangSmithClient(): Client | null {
-  // LangSmith API key should be added via webdev_request_secrets
   const apiKey = process.env.LANGSMITH_API_KEY;
   
   if (!apiKey) {
@@ -28,8 +29,7 @@ export function getLangSmithClient(): Client | null {
   if (!_client) {
     _client = new Client({
       apiKey,
-      // Optional: customize API URL for self-hosted instances
-      apiUrl: process.env.LANGSMITH_API_URL,
+      apiUrl: process.env.LANGSMITH_ENDPOINT,
     });
   }
 
@@ -37,58 +37,43 @@ export function getLangSmithClient(): Client | null {
 }
 
 /**
- * Pull a prompt from LangSmith Hub
- * 
- * @param promptIdentifier - Format: "owner/prompt-name" or "owner/prompt-name:version"
- * @param includeModel - Whether to include model configuration
- * @returns Prompt template or null if unavailable
- */
-export async function pullPromptFromHub(
-  promptIdentifier: string,
-  includeModel: boolean = false
-): Promise<any | null> {
-  const client = getLangSmithClient();
-  if (!client) return null;
-
-  try {
-    // Note: Use client._pullPrompt() for internal API access
-    const prompt = await (client as any).pullPrompt(promptIdentifier, { includeModel });
-    console.log(`[LangSmith] Pulled prompt: ${promptIdentifier}`);
-    return prompt;
-  } catch (error) {
-    console.error(`[LangSmith] Failed to pull prompt ${promptIdentifier}:`, error);
-    return null;
-  }
-}
-
-/**
- * Create a traced run for observability
+ * Create a traced run for observability using RunTree
  * 
  * @param name - Name of the run
  * @param runType - Type: "llm", "chain", "tool", "retriever", "prompt"
  * @param inputs - Input data
- * @param projectName - Optional project name (defaults to agent name)
+ * @param projectName - Optional project name
+ * @param metadata - Optional metadata
  * @returns Run ID for tracking
  */
 export async function createTracedRun(
   name: string,
   runType: "llm" | "chain" | "tool" | "retriever" | "prompt",
   inputs: Record<string, any>,
-  projectName?: string
+  projectName?: string,
+  metadata?: Record<string, any>
 ): Promise<string | null> {
   const client = getLangSmithClient();
   if (!client) return null;
 
   try {
-    const run = await client.createRun({
+    const runTree = new RunTree({
       name,
       run_type: runType,
       inputs,
-      project_name: projectName,
-      start_time: Date.now(),
+      project_name: projectName || process.env.LANGSMITH_PROJECT || "default",
+      client,
+      extra: metadata,
     });
     
-    return (run as any).id || null;
+    // Post the run to LangSmith
+    await runTree.postRun();
+    
+    // Store for later updates
+    activeRuns.set(runTree.id, runTree);
+    
+    console.log(`[LangSmith] Created trace: ${runTree.id}`);
+    return runTree.id;
   } catch (error) {
     console.error(`[LangSmith] Failed to create traced run:`, error);
     return null;
@@ -99,25 +84,46 @@ export async function createTracedRun(
  * Update a traced run with outputs and status
  * 
  * @param runId - Run ID from createTracedRun
- * @param outputs - Output data
- * @param error - Optional error message
+ * @param data - Update data (outputs, error, endTime, metadata)
+ * @returns Trace URL for viewing in LangSmith
  */
 export async function updateTracedRun(
   runId: string,
-  outputs?: Record<string, any>,
-  error?: string
-): Promise<void> {
-  const client = getLangSmithClient();
-  if (!client) return;
+  data: {
+    outputs?: Record<string, any>;
+    error?: string;
+    endTime?: number;
+    metadata?: Record<string, any>;
+  }
+): Promise<string | undefined> {
+  const runTree = activeRuns.get(runId);
+  if (!runTree) {
+    console.warn(`[LangSmith] Run ${runId} not found in active runs`);
+    return undefined;
+  }
 
   try {
-    await client.updateRun(runId, {
-      outputs,
-      error,
-      end_time: Date.now(),
-    });
-  } catch (err) {
-    console.error(`[LangSmith] Failed to update traced run:`, err);
+    // End the run with outputs or error
+    if (data.error) {
+      runTree.error = data.error;
+    }
+    
+    await runTree.end(data.outputs);
+    await runTree.patchRun();
+    
+    // Clean up from active runs
+    activeRuns.delete(runId);
+    
+    // Generate trace URL
+    const orgId = process.env.LANGSMITH_ORG_ID || "default";
+    const projectName = process.env.LANGSMITH_PROJECT || "default";
+    const traceUrl = `https://smith.langchain.com/o/${orgId}/projects/p/${projectName}/r/${runId}`;
+    
+    console.log(`[LangSmith] Updated trace: ${traceUrl}`);
+    return traceUrl;
+  } catch (error) {
+    console.error(`[LangSmith] Failed to update traced run:`, error);
+    return undefined;
   }
 }
 
@@ -137,7 +143,6 @@ export async function createDataset(
 
   try {
     const dataset = await client.createDataset(datasetName, { description });
-    console.log(`[LangSmith] Created dataset: ${datasetName}`);
     return dataset.id;
   } catch (error) {
     console.error(`[LangSmith] Failed to create dataset:`, error);
@@ -151,57 +156,21 @@ export async function createDataset(
  * @param datasetId - Dataset ID
  * @param inputs - Input data
  * @param outputs - Expected output data
+ * @returns Example ID or null
  */
 export async function addDatasetExample(
   datasetId: string,
   inputs: Record<string, any>,
   outputs: Record<string, any>
-): Promise<void> {
+): Promise<string | null> {
   const client = getLangSmithClient();
-  if (!client) return;
+  if (!client) return null;
 
   try {
-    await client.createExample(inputs, outputs, { datasetId });
+    const example = await client.createExample(inputs, outputs, { datasetId });
+    return example.id;
   } catch (error) {
     console.error(`[LangSmith] Failed to add dataset example:`, error);
-  }
-}
-
-/**
- * Expert prompts from LangSmith Hub for different agent types
- */
-export const LANGSMITH_PROMPTS = {
-  // ReAct agent prompt (most popular)
-  REACT_AGENT: "hwchase17/react",
-  
-  // Superagent with sequential function calling
-  SUPER_AGENT: "homanp/superagent",
-  
-  // System prompt generator (meta-prompt)
-  SYSTEM_PROMPT_GENERATOR: "ohkgi/superb_system_instruction_prompt",
-  
-  // Assumption checker for self-checking
-  ASSUMPTION_CHECKER: "smithing-gold/assumption-checker",
-  
-  // ReAct agent scratchpad for thought extraction
-  REACT_SCRATCHPAD: "jet-taekyo-lee/tagging-extracting-agent-scratchpad",
-  
-  // Simple ReAct system prompt
-  REACT_SYSTEM: "anandbhaskaran/react-system-prompt",
-} as const;
-
-/**
- * Get recommended prompt for agent type
- */
-export function getRecommendedPrompt(agentType: "supervisor" | "worker" | "custom"): string {
-  switch (agentType) {
-    case "supervisor":
-      return LANGSMITH_PROMPTS.SUPER_AGENT;
-    case "worker":
-      return LANGSMITH_PROMPTS.REACT_AGENT;
-    case "custom":
-      return LANGSMITH_PROMPTS.SYSTEM_PROMPT_GENERATOR;
-    default:
-      return LANGSMITH_PROMPTS.REACT_AGENT;
+    return null;
   }
 }

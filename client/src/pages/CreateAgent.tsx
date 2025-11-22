@@ -35,9 +35,6 @@ export default function CreateAgent() {
   });
   
   const handleGenerate = () => {
-    // Get template usage ID from session storage if this was cloned from a template
-    const templateUsageId = sessionStorage.getItem('templateUsageId');
-    
     createMutation.mutate({
       name: formData.name,
       description: formData.description,
@@ -50,8 +47,7 @@ export default function CreateAgent() {
       systemPrompt: formData.systemPrompt,
       maxIterations: formData.maxIterations,
       maxRetries: formData.maxRetries,
-      ...(templateUsageId && { templateUsageId: parseInt(templateUsageId) }),
-    } as any);
+    });
   };
   
   const progress = (currentStep / steps.length) * 100;

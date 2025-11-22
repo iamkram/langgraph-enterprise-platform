@@ -22,13 +22,6 @@
       "when": 1763599357513,
       "tag": "0002_wide_raider",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1763779029009,
-      "tag": "0003_thin_tyger_tiger",
-      "breakpoints": true
     }
   ]
 }

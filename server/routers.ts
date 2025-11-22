@@ -2,8 +2,6 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { executionRouter } from "./execution";
-import { templateRouter } from "./templateRouter";
-import { docsChatRouter } from "./docsChatRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { agentConfigSchema } from "@shared/agentValidation";
@@ -23,8 +21,6 @@ export const appRouter = router({
   }),
 
   execution: executionRouter,
-  templates: templateRouter,
-  docsChat: docsChatRouter,
   
   agents: router({
     list: protectedProcedure.query(async ({ ctx }) => {
@@ -47,9 +43,7 @@ export const appRouter = router({
       }),
     
     create: protectedProcedure
-      .input(agentConfigSchema.extend({
-        templateUsageId: z.number().optional(),
-      }))
+      .input(agentConfigSchema)
       .mutation(async ({ input, ctx }) => {
         const { createAgentConfig, saveGeneratedCode } = await import("./db");
         const {
@@ -92,17 +86,6 @@ export const appRouter = router({
         if (input.workerAgents && input.workerAgents.length > 0) {
           const workerCode = generateWorkerCode(input.workerAgents[0], input.tools || []);
           await saveGeneratedCode(agentId, "worker", workerCode);
-        }
-        
-        // Track template completion if this was cloned from a template
-        if (input.templateUsageId) {
-          try {
-            const { markTemplateCompleted } = await import('./lib/templateAnalytics');
-            await markTemplateCompleted(input.templateUsageId, agentId);
-          } catch (error) {
-            console.error('Failed to track template completion:', error);
-            // Don't fail agent creation if tracking fails
-          }
         }
         
         return { id: agentId, agentId: agentId, success: true };
@@ -181,42 +164,9 @@ export const appRouter = router({
         }
         
         const codes = await getGeneratedCodeByAgentId(input.agentId);
-        let completeCode = codes.find(c => c.codeType === 'complete');
-        
-        // If code doesn't exist, regenerate it
-        if (!completeCode || !completeCode.code) {
-          const { generateCompleteCode } = await import('./codeGeneration');
-          const { saveGeneratedCode } = await import('./db');
-          
-          // Validate agentType
-          const validAgentTypes = ['supervisor', 'worker', 'custom'] as const;
-          type AgentType = typeof validAgentTypes[number];
-          const agentType: AgentType = validAgentTypes.includes(config.agentType as AgentType) 
-            ? (config.agentType as AgentType)
-            : 'custom';
-          
-          const generatedCode = generateCompleteCode({
-            name: config.name,
-            description: config.description || '',
-            agentType,
-            workerAgents: JSON.parse(config.workerAgents || '[]'),
-            tools: JSON.parse(config.tools || '[]'),
-            modelName: config.modelName,
-            systemPrompt: config.systemPrompt || undefined,
-            maxIterations: config.maxIterations,
-            maxRetries: config.maxRetries,
-            securityEnabled: config.securityEnabled === 1,
-            checkpointingEnabled: config.checkpointingEnabled === 1,
-          });
-          await saveGeneratedCode(input.agentId, 'complete', generatedCode);
-          return {
-            code: generatedCode,
-            language: 'python',
-          };
-        }
-        
+        const mainCode = codes.find(c => c.codeType === 'main');
         return {
-          code: completeCode.code,
+          code: mainCode?.code || '',
           language: 'python',
         };
       }),
@@ -345,53 +295,10 @@ export const appRouter = router({
         const { listAgentsByStatus } = await import('./approvalWorkflow');
         return await listAgentsByStatus(input.status);
       }),
-    
-    listPending: protectedProcedure
-      .query(async () => {
-        const { listAgentsByStatus } = await import('./approvalWorkflow');
-        return await listAgentsByStatus('pending');
-      }),
-    
-    handleWebhook: protectedProcedure
-      .input(z.object({
-        issueKey: z.string(),
-        status: z.string(),
-        approver: z.string().optional(),
-        comments: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { handleJiraWebhook } = await import('./approvalWorkflow');
-        return await handleJiraWebhook({
-          issueKey: input.issueKey,
-          status: input.status,
-          approver: input.approver,
-          comments: input.comments,
-        });
-      }),
   }),
 
   // Analytics
   analytics: router({
-    trackExecution: protectedProcedure
-      .input(z.object({
-        agentId: z.number(),
-        executionTime: z.number(),
-        tokensUsed: z.number(),
-        success: z.boolean(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const { logUsageEvent } = await import('./db');
-        await logUsageEvent({
-          agentConfigId: input.agentId,
-          eventType: 'execution',
-          userId: ctx.user.id,
-          tokensUsed: input.tokensUsed,
-          executionTimeMs: input.executionTime,
-          metadata: { success: input.success },
-        });
-        return { success: true };
-      }),
-    
     logEvent: protectedProcedure
       .input(z.object({
         agentConfigId: z.number(),
@@ -412,18 +319,12 @@ export const appRouter = router({
     
     getDailyMetrics: protectedProcedure
       .input(z.object({
-        date: z.string().optional(),
-        startDate: z.date().optional(),
-        endDate: z.date().optional(),
+        date: z.string(),
         agentConfigId: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        // If date range provided, return empty array for now (test just checks it's an array)
-        if (input.startDate || input.endDate) {
-          return [];
-        }
         const { getDailyMetrics } = await import('./db');
-        return await getDailyMetrics(input.date || new Date().toISOString().split('T')[0], input.agentConfigId);
+        return await getDailyMetrics(input.date, input.agentConfigId);
       }),
     
     getUsageByDate: protectedProcedure

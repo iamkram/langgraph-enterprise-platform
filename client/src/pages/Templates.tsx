@@ -7,33 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Clock, Sparkles, ArrowRight, Code2, CheckCircle2 } from "lucide-react";
 import { useAgentFormStore } from "@/stores/agentFormStore";
-import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
 
 export default function Templates() {
   const [, setLocation] = useLocation();
   const { loadFromTemplate } = useAgentFormStore();
   const [selectedTemplate, setSelectedTemplate] = useState<AgentTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  
-  // Fetch template statistics
-  const { data: templateStats } = trpc.templates.getAllStats.useQuery();
-
-  // Helper to get stats for a template
-  const getTemplateStats = (templateId: string) => {
-    return templateStats?.find((s: any) => s.templateId === templateId);
-  };
 
   const categories = [
     { id: "all", label: "All Templates", count: agentTemplates.length },
-    { id: "popular", label: "Popular", count: templateStats?.filter((s: any) => s.totalClones > 0).length || 0 },
     { id: "financial", label: "Financial", count: agentTemplates.filter(t => t.category === "financial").length },
     { id: "customer-service", label: "Customer Service", count: agentTemplates.filter(t => t.category === "customer-service").length },
     { id: "research", label: "Research", count: agentTemplates.filter(t => t.category === "research").length },
-    { id: "productivity", label: "Productivity", count: agentTemplates.filter(t => t.category === "productivity").length },
+    { id: "general", label: "General", count: agentTemplates.filter(t => t.category === "general").length },
   ];
 
   const filteredTemplates = selectedCategory === "all" 
@@ -49,23 +37,9 @@ export default function Templates() {
     }
   };
 
-  const trackCloneMutation = trpc.templates.trackClone.useMutation();
-
-  const handleCloneTemplate = async (template: AgentTemplate) => {
+  const handleCloneTemplate = (template: AgentTemplate) => {
     loadFromTemplate(template);
-    
-    // Track template clone
-    try {
-      const result = await trackCloneMutation.mutateAsync({ templateId: template.id });
-      // Store usage ID in session storage for later completion tracking
-      sessionStorage.setItem('templateUsageId', result.usageId.toString());
-      sessionStorage.setItem('templateId', template.id);
-    } catch (error) {
-      console.error('Failed to track template clone:', error);
-      // Don't block the user flow if tracking fails
-    }
-    
-    setLocation("/create");
+    setLocation("/create-agent");
   };
 
   return (
@@ -73,12 +47,6 @@ export default function Templates() {
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container py-8">
-          <Link href="/">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold tracking-tight">Agent Templates</h1>
@@ -86,7 +54,7 @@ export default function Templates() {
                 Start with pre-configured templates and customize to your needs
               </p>
             </div>
-            <Button onClick={() => setLocation("/create")} variant="outline">
+            <Button onClick={() => setLocation("/create-agent")} variant="outline">
               Create from Scratch
             </Button>
           </div>
@@ -97,7 +65,7 @@ export default function Templates() {
       <div className="container py-8">
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-8">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             {categories.map(cat => (
               <TabsTrigger key={cat.id} value={cat.id} className="flex items-center gap-2">
                 {cat.label}

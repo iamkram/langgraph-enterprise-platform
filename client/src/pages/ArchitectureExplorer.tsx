@@ -5,12 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLeft, ZoomIn } from "lucide-react";
-import { Link } from "wouter";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu } from "lucide-react";
 import { architectureComponents, type ComponentDetail } from "@shared/architectureData";
-import { diagramHotspots } from "@shared/diagramHotspots";
-import { DiagramHotspot } from "@/components/DiagramHotspot";
 
 const diagrams = [
   {
@@ -63,8 +59,6 @@ export default function ArchitectureExplorer() {
   const [selectedComponent, setSelectedComponent] = useState<ComponentDetail | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
-  const [selectedDiagram, setSelectedDiagram] = useState<typeof diagrams[0] | null>(null);
-  const [activeTab, setActiveTab] = useState("system");
 
   const components = Object.values(architectureComponents);
   
@@ -85,12 +79,6 @@ export default function ArchitectureExplorer() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
         <div className="mb-8">
-          <Link href="/">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
           <h1 className="text-4xl font-bold mb-2">Architecture Explorer</h1>
           <p className="text-muted-foreground">
             Interactive documentation for the Enterprise LangGraph Agent Scaffolding Platform
@@ -109,7 +97,7 @@ export default function ArchitectureExplorer() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="system" className="w-full" onValueChange={setActiveTab}>
+                <Tabs defaultValue="system" className="w-full">
                   <TabsList className="grid w-full grid-cols-5">
                     {diagrams.map(diagram => {
                       const Icon = diagram.icon;
@@ -128,34 +116,16 @@ export default function ArchitectureExplorer() {
                           <h3 className="font-semibold text-lg">{diagram.name}</h3>
                           <p className="text-sm text-muted-foreground">{diagram.description}</p>
                         </div>
-                        <div className="relative">
-                          <div 
-                            className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                            onClick={() => setSelectedDiagram(diagram)}
-                          >
-                            <img 
-                              src={diagram.image} 
-                              alt={diagram.name}
-                              className="w-full h-auto"
-                            />
-                          </div>
-                          {/* Interactive Hotspots */}
-                          <div className="absolute inset-0 pointer-events-none">
-                            <div className="relative w-full h-full pointer-events-auto">
-                              {diagramHotspots[diagram.id]?.map((hotspot) => (
-                                <DiagramHotspot key={hotspot.id} hotspot={hotspot} />
-                              ))}
-                            </div>
-                          </div>
+                        <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                          <img 
+                            src={diagram.image} 
+                            alt={diagram.name}
+                            className="w-full h-auto"
+                          />
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground text-center">
-                            Click image to view full size • Click <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px]">i</span> hotspots for component details
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Click on components in the list below to see detailed information
-                          </p>
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Click on components in the list below to see detailed information
+                        </p>
                       </div>
                     </TabsContent>
                   ))}
@@ -399,27 +369,6 @@ export default function ArchitectureExplorer() {
           </div>
         </div>
       </div>
-
-      {/* Full-size Diagram Modal */}
-      <Dialog open={!!selectedDiagram} onOpenChange={(open) => !open && setSelectedDiagram(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ZoomIn className="h-5 w-5" />
-              {selectedDiagram?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            {selectedDiagram && (
-              <img 
-                src={selectedDiagram.image} 
-                alt={selectedDiagram.name}
-                className="w-full h-auto rounded-lg"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

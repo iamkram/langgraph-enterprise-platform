@@ -1,9 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart, Activity, Users, Clock, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
+import { BarChart, Activity, Users, Clock } from "lucide-react";
 
 /**
  * Analytics Dashboard
@@ -48,12 +46,6 @@ export default function Analytics() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <Link href="/">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
-        </Link>
         <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
         <p className="text-muted-foreground">
           Usage metrics and performance statistics for {today}

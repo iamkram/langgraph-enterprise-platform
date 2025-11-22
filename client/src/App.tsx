@@ -5,7 +5,6 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import AgentsList from "./pages/AgentsList";
-import EnhancedHome from "./pages/EnhancedHome";
 import CreateAgent from "./pages/CreateAgent";
 import AgentDetail from "./pages/AgentDetail";
 import Analytics from "./pages/Analytics";
@@ -16,8 +15,7 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={EnhancedHome} />
-      <Route path="/agents" component={AgentsList} />
+      <Route path={"/"} component={AgentsList} />
       <Route path="/create" component={CreateAgent} />
       <Route path="/agent/:id" component={AgentDetail} />
       <Route path="/analytics" component={Analytics} />      <Route path={"/templates"} component={Templates} />
