@@ -305,3 +305,9 @@
 - [x] Configure LANGSMITH_PROJECT and LANGSMITH_ORG_ID
 - [x] Write vitest test to validate LangSmith integration
 - [x] Test end-to-end agent execution with tracing
+
+## Enhanced Home Screen (Restoration)
+- [x] Create documentation chat backend endpoint with LLM integration
+- [x] Create EnhancedHome.tsx with chat interface, quick actions, and recent agents
+- [x] Update App.tsx routing to use EnhancedHome
+- [x] Test documentation chat functionality
