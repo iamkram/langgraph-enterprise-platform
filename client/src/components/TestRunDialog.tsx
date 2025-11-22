@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Play, Loader2, CheckCircle2, XCircle, Clock, DollarSign } from "lucide-react";
+import { Play, Loader2, CheckCircle2, XCircle, Clock, DollarSign, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -136,17 +136,29 @@ export default function TestRunDialog({ agentConfig, agentId }: TestRunDialogPro
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Execution Result</h3>
-                {result.success ? (
-                  <Badge variant="default" className="bg-green-500">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Success
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    Failed
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {result.metadata?.traceUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(result.metadata.traceUrl, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View Trace
+                    </Button>
+                  )}
+                  {result.success ? (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Success
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               {/* Metadata */}

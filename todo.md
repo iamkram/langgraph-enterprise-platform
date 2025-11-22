@@ -318,3 +318,24 @@
 - [x] Restart development server
 - [x] Verify docsChat router types are recognized
 - [x] Test documentation chat functionality end-to-end
+
+
+## LangSmith Trace URL Display
+- [x] Add traceUrl field to execution response type
+- [x] Update execution results UI to show "View Trace" button
+- [x] Open LangSmith trace in new tab when clicked
+- [ ] Test trace URL display with real execution
+
+## Remaining Template Enhancement
+- [x] Enhance Compliance Monitoring template with expert prompts (3 workers)
+- [x] Enhance Data Analyst template with expert prompts (3 workers)
+- [ ] Test template cloning with enhanced prompts
+
+## Trace Analytics Dashboard
+- [x] Create analytics router with trace metrics endpoints (mock data)
+- [x] Design analytics dashboard page with charts
+- [x] Display execution count, average duration, error rate, token usage
+- [x] Add TraceAnalytics route to App.tsx
+- [ ] Create database table for trace metrics aggregation (future)
+- [ ] Add filters for date range, agent type, status (future)
+- [ ] Test analytics dashboard with real data

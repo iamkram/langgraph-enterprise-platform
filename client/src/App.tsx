@@ -11,6 +11,7 @@ import AgentDetail from "./pages/AgentDetail";
 import Analytics from "./pages/Analytics";
 import Templates from "./pages/Templates";
 import ArchitectureExplorer from "./pages/ArchitectureExplorer";
+import TraceAnalytics from "./pages/TraceAnalytics";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -21,7 +22,8 @@ function Router() {
       <Route path="/agents/create" component={CreateAgent} />
       <Route path="/create" component={CreateAgent} />
       <Route path="/agent/:id" component={AgentDetail} />
-      <Route path="/analytics" component={Analytics} />      <Route path={"/templates"} component={Templates} />
+      <Route path="/analytics" component={Analytics} />
+      <Route path="/trace-analytics" component={TraceAnalytics} />      <Route path={"/templates"} component={Templates} />
       <Route path={"/architecture"} component={ArchitectureExplorer} />      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
