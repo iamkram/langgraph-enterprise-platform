@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLeft } from "lucide-react";
+import { Search, X, ExternalLink, Layers, Database, Cloud, Shield, Cpu, ArrowLeft, ZoomIn } from "lucide-react";
 import { Link } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { architectureComponents, type ComponentDetail } from "@shared/architectureData";
 
 const diagrams = [
@@ -60,6 +61,7 @@ export default function ArchitectureExplorer() {
   const [selectedComponent, setSelectedComponent] = useState<ComponentDetail | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
+  const [selectedDiagram, setSelectedDiagram] = useState<typeof diagrams[0] | null>(null);
 
   const components = Object.values(architectureComponents);
   
@@ -123,13 +125,19 @@ export default function ArchitectureExplorer() {
                           <h3 className="font-semibold text-lg">{diagram.name}</h3>
                           <p className="text-sm text-muted-foreground">{diagram.description}</p>
                         </div>
-                        <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                        <div 
+                          className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                          onClick={() => setSelectedDiagram(diagram)}
+                        >
                           <img 
                             src={diagram.image} 
                             alt={diagram.name}
                             className="w-full h-auto"
                           />
                         </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Click image to view full size
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           Click on components in the list below to see detailed information
                         </p>
@@ -376,6 +384,27 @@ export default function ArchitectureExplorer() {
           </div>
         </div>
       </div>
+
+      {/* Full-size Diagram Modal */}
+      <Dialog open={!!selectedDiagram} onOpenChange={(open) => !open && setSelectedDiagram(null)}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ZoomIn className="h-5 w-5" />
+              {selectedDiagram?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedDiagram && (
+              <img 
+                src={selectedDiagram.image} 
+                alt={selectedDiagram.name}
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -331,3 +331,12 @@
 - [x] Add back navigation link to Templates page
 - [x] Add back navigation link to Analytics page
 - [x] Test all back navigation links work correctly
+
+
+---
+
+# Fix Architecture Diagram Images (Current Session)
+
+- [x] Investigate why diagram images are not clickable
+- [x] Make diagram images clickable to open in full-size view or modal
+- [x] Test diagram image clicks work correctly
