@@ -479,3 +479,20 @@
 - [x] Implement chat UI with message history
 - [x] Add quick action buttons and improved layout
 - [x] Test chat functionality with documentation questions
+
+## LangSmith Integration & Template Enhancement
+- [x] Research LangSmith features (tracing, evaluation, datasets, monitoring, prompt hub)
+- [x] Review LangSmith Hub prompts for agent templates (hwchase17/react, homanp/superagent, ohkgi/superb_system_instruction_prompt)
+- [x] Install and configure LangSmith SDK
+- [x] Create LangSmith integration service (tracing, prompts, evaluation, datasets)
+- [x] Create prompt management system with expert prompts from Hub
+- [x] Enhance Executive Assistant template with expert prompts (5 workers updated)
+- [ ] Enhance Financial Analysis template with expert prompts
+- [ ] Enhance Customer Service template with expert prompts
+- [ ] Enhance Research Assistant template with expert prompts
+- [ ] Add LangSmith tracing to agent execution runtime
+- [ ] Implement LangSmith evaluation framework
+- [ ] Add LangSmith datasets for testing
+- [ ] Set up LangSmith monitoring and observability
+- [ ] Update code generation to include LangSmith features
+- [ ] Request LANGSMITH_API_KEY via webdev_request_secrets
