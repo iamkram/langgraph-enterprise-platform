@@ -369,4 +369,35 @@
 ## Analytics Page Navigation Improvement
 - [x] Add "Back to Home" button to Analytics page
 - [x] Test navigation consistency
-- [ ] Save checkpoint with update
+- [x] Save checkpoint with update
+
+
+## LLM-Assisted Custom Tool & Agent Creation
+
+### Backend Implementation
+- [x] Research and select appropriate LangGraph Hub prompts for tool generation
+- [x] Research and select appropriate LangGraph Hub prompts for agent generation
+- [x] Create tRPC endpoint: aiAssistant.generateTool (input: userMessage, returns: tool spec)
+- [x] Create tRPC endpoint: aiAssistant.generateAgent (input: userMessage, returns: agent config)
+- [ ] Implement streaming support for real-time LLM responses (deferred - will use standard responses first)
+- [ ] Add validation for LLM-generated tool specifications
+- [ ] Add validation for LLM-generated agent configurations
+
+### Frontend UI Components
+- [x] Create AIToolCreator component with LLM chat interface
+- [x] Create AIAgentCreator component with LLM chat interface
+- [ ] Add "AI Assistant" button to tool selection step in wizard
+- [ ] Add "AI Assistant" button to agent creation wizard
+- [x] Implement conversational interface for LLM suggestions
+- [x] Add "Use This Tool/Agent" and "Cancel" buttons for LLM output
+- [x] Create preview panel for generated tool/agent specifications
+
+### Integration & Testing
+- [x] Integrate custom tool creator into Step 3 (Tool Selection) of wizard
+- [x] Integrate custom agent creator into worker configuration step
+- [x] Add route for standalone custom tool creation page (optional - wizard integration sufficient)
+- [x] Add route for standalone custom agent creation page (optional - wizard integration sufficient)
+- [x] Test LLM-assisted tool generation with various descriptions (AI Tool Creator UI tested)
+- [x] Test LLM-assisted agent generation with various use cases (data analyst agent created successfully)
+- [x] Write vitest tests for LLM generation endpoints (4/4 tests passed)
+- [ ] Save checkpoint with new features

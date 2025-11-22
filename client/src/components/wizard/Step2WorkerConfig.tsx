@@ -3,8 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useAgentFormStore } from "@/stores/agentFormStore";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Sparkles } from "lucide-react";
 import { useState } from "react";
+import AIAgentCreator from "@/components/AIAgentCreator";
 
 const PREDEFINED_WORKERS = [
   { name: "researcher", description: "Gathers information and data" },
@@ -13,8 +14,10 @@ const PREDEFINED_WORKERS = [
 ];
 
 export default function Step2WorkerConfig() {
-  const { workerAgents, addWorkerAgent, removeWorkerAgent, agentType } = useAgentFormStore();
+  const { workerAgents, addWorkerAgent, removeWorkerAgent, agentType, tools } = useAgentFormStore();
   const [customWorker, setCustomWorker] = useState("");
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   
   if (agentType !== 'supervisor') {
     return (
@@ -68,27 +71,72 @@ export default function Step2WorkerConfig() {
       </div>
       
       <div>
-        <Label htmlFor="custom-worker">Add Custom Worker</Label>
-        <p className="text-sm text-muted-foreground mb-2">
-          Add your own custom worker agent
-        </p>
-        <div className="flex gap-2">
-          <Input
-            id="custom-worker"
-            placeholder="e.g., data_processor"
-            value={customWorker}
-            onChange={(e) => setCustomWorker(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAddCustomWorker();
-              }
-            }}
-          />
-          <Button onClick={handleAddCustomWorker} size="icon">
-            <Plus className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center justify-between mb-2">
+          <Label>Add Custom Worker</Label>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowAIAssistant(true);
+                setShowManualEntry(false);
+              }}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Assistant
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowManualEntry(!showManualEntry);
+                setShowAIAssistant(false);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Manual Entry
+            </Button>
+          </div>
         </div>
+        
+        {showAIAssistant && (
+          <AIAgentCreator
+            availableTools={tools.map(t => t.name)}
+            onAgentGenerated={(agentSpec) => {
+              // For now, just add the agent name to the workers list
+              // In a future enhancement, we could store the full agent spec
+              addWorkerAgent(agentSpec.name);
+              setShowAIAssistant(false);
+            }}
+            onCancel={() => setShowAIAssistant(false)}
+          />
+        )}
+        
+        {showManualEntry && (
+          <div className="mt-2">
+            <p className="text-sm text-muted-foreground mb-2">
+              Add your own custom worker agent
+            </p>
+            <div className="flex gap-2">
+              <Input
+                id="custom-worker"
+                placeholder="e.g., data_processor"
+                value={customWorker}
+                onChange={(e) => setCustomWorker(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomWorker();
+                  }
+                }}
+              />
+              <Button onClick={handleAddCustomWorker} size="icon">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
       
       {workerAgents.length > 0 && (

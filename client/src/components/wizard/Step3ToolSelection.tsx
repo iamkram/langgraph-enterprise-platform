@@ -5,8 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAgentFormStore } from "@/stores/agentFormStore";
-import { Plus, X, Wrench } from "lucide-react";
+import { Plus, X, Wrench, Sparkles } from "lucide-react";
 import { useState } from "react";
+import AIToolCreator from "@/components/AIToolCreator";
 
 const PREDEFINED_TOOLS = [
   {
@@ -29,6 +30,7 @@ const PREDEFINED_TOOLS = [
 export default function Step3ToolSelection() {
   const { tools, addTool, removeTool } = useAgentFormStore();
   const [showCustomForm, setShowCustomForm] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [customTool, setCustomTool] = useState({
     name: "",
     description: "",
@@ -105,15 +107,42 @@ export default function Step3ToolSelection() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <Label>Custom Tools</Label>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCustomForm(!showCustomForm)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Custom Tool
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowAIAssistant(true);
+                setShowCustomForm(false);
+              }}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Assistant
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowCustomForm(!showCustomForm);
+                setShowAIAssistant(false);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Manual Entry
+            </Button>
+          </div>
         </div>
+        
+        {showAIAssistant && (
+          <AIToolCreator
+            onToolGenerated={(toolSpec) => {
+              addTool(toolSpec);
+              setShowAIAssistant(false);
+            }}
+            onCancel={() => setShowAIAssistant(false)}
+          />
+        )}
         
         {showCustomForm && (
           <Card>

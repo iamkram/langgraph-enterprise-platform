@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { executionRouter } from "./execution";
 import { docsChatRouter } from "./docsChatRouter";
 import { analyticsRouter } from "./analyticsRouter";
+import { aiAssistantRouter } from "./aiAssistantRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { agentConfigSchema } from "@shared/agentValidation";
@@ -25,6 +26,7 @@ export const appRouter = router({
   execution: executionRouter,
   docsChat: docsChatRouter,
   traceAnalytics: analyticsRouter,
+  aiAssistant: aiAssistantRouter,
   
   agents: router({
     list: protectedProcedure.query(async ({ ctx }) => {
